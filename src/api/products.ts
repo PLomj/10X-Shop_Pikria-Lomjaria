@@ -1,5 +1,14 @@
 import type { Product, ProductsResponse } from '../types/product'
 
+const productsUrl = 'https://dummyjson.com/products'
+
+export class ProductNotFoundError extends Error {
+  constructor(id: number) {
+    super(`Product ${id} was not found.`)
+    this.name = 'ProductNotFoundError'
+  }
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
@@ -14,7 +23,8 @@ function isProduct(value: unknown): value is Product {
     typeof value.description === 'string' &&
     typeof value.price === 'number' &&
     Number.isFinite(value.price) &&
-    typeof value.discountPercentage === 'number' &&
+    (value.discountPercentage === undefined || typeof value.discountPercentage === 'number') &&
+    (value.brand === undefined || typeof value.brand === 'string') &&
     (value.rating === undefined || typeof value.rating === 'number') &&
     typeof value.stock === 'number' &&
     typeof value.category === 'string' &&
@@ -36,7 +46,7 @@ function isProductsResponse(value: unknown): value is ProductsResponse {
 }
 
 export async function fetchProducts(signal?: AbortSignal): Promise<ProductsResponse> {
-  const response = await fetch('https://dummyjson.com/products', { signal })
+  const response = await fetch(productsUrl, { signal })
 
   if (!response.ok) {
     throw new Error(`Product request failed (HTTP ${response.status}).`)
@@ -44,6 +54,27 @@ export async function fetchProducts(signal?: AbortSignal): Promise<ProductsRespo
 
   const data: unknown = await response.json()
   if (!isProductsResponse(data)) {
+    throw new Error('The product API returned an unexpected response.')
+  }
+
+  return data
+}
+
+export async function fetchProductById(id: number, signal?: AbortSignal): Promise<Product> {
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    throw new Error('A product ID must be a positive safe integer.')
+  }
+
+  const response = await fetch(`${productsUrl}/${id}`, { signal })
+  if (response.status === 404) {
+    throw new ProductNotFoundError(id)
+  }
+  if (!response.ok) {
+    throw new Error(`Product request failed (HTTP ${response.status}).`)
+  }
+
+  const data: unknown = await response.json()
+  if (!isProduct(data) || data.id !== id) {
     throw new Error('The product API returned an unexpected response.')
   }
 

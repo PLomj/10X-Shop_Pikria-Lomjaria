@@ -3,7 +3,8 @@ export interface Product {
   title: string
   description: string
   price: number
-  discountPercentage: number
+  discountPercentage?: number
+  brand?: string
   rating?: number
   stock: number
   category: string
