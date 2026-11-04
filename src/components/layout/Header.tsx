@@ -1,4 +1,5 @@
 import { Link, NavLink } from 'react-router'
+import { useCart } from '../../context/CartContext'
 
 const links = [
   { to: '/', label: 'Catalog' },
@@ -7,6 +8,7 @@ const links = [
 ]
 
 export default function Header() {
+  const { cartItemCount } = useCart()
   return (
     <header className="border-b border-neutral-200 bg-white">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
@@ -26,7 +28,7 @@ export default function Header() {
                     }`
                   }
                 >
-                  {label}
+                  {to === '/cart' ? `Cart (${cartItemCount})` : label}
                 </NavLink>
               </li>
             ))}

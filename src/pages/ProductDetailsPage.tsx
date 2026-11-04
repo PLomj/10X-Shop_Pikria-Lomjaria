@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { fetchProductById, ProductNotFoundError } from '../api/products'
 import ProductGallery from '../components/product/ProductGallery'
+import { AddToCartButton } from '../components/product/ProductCard'
 import type { Product } from '../types/product'
-
-const priceFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+import { formatPrice } from '../utils/currency'
 
 function ProductDetails({ id }: { id: number }) {
   const [product, setProduct] = useState<Product | null>(null)
@@ -66,7 +66,7 @@ function ProductDetails({ id }: { id: number }) {
       <ProductGallery product={product} />
       <div className="space-y-4">
         <h1 className="text-2xl font-bold sm:text-3xl">{product.title}</h1>
-        <p className="text-xl font-semibold">{priceFormatter.format(product.price)}</p>
+        <p className="text-xl font-semibold">{formatPrice(product.price)}</p>
         <p className="text-neutral-700">{product.description}</p>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
           <dt className="font-semibold">Category</dt>
@@ -81,6 +81,7 @@ function ProductDetails({ id }: { id: number }) {
           <dt className="font-semibold">Availability</dt>
           <dd>{product.stock > 0 ? `In stock (${product.stock})` : 'Out of stock'}</dd>
         </dl>
+        <AddToCartButton product={product} />
       </div>
     </article>
   )
