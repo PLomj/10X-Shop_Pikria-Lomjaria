@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { fetchProducts, searchProducts } from '../api/products'
+import { fetchProducts, getProductCategories, searchProducts } from '../api/products'
 import ProductCard from '../components/product/ProductCard'
 import SearchInput from '../components/ui/SearchInput'
-import type { Product } from '../types/product'
+import CategorySelector from '../components/ui/CategorySelector'
+import type { Product, ProductCategory } from '../types/product'
 
 interface CatalogRequest {
   query: string
@@ -15,12 +16,38 @@ type CatalogResult =
 
 export default function CatalogPage() {
   const [searchText, setSearchText] = useState('')
+  const [categories, setCategories] = useState<ProductCategory[] | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [categoryError, setCategoryError] = useState(false)
+  const [categoryAttempt, setCategoryAttempt] = useState(0)
   const [request, setRequest] = useState<CatalogRequest>({ query: '', immediate: true })
   const [result, setResult] = useState<CatalogResult | null>(null)
   const { query } = request
   const currentResult = result?.request === request ? result : null
   const error = currentResult && 'error' in currentResult ? currentResult.error : null
   const products = currentResult && 'products' in currentResult ? currentResult.products : null
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const { signal } = controller
+
+    async function loadCategories() {
+      try {
+        const list = await getProductCategories(signal)
+        if (!signal.aborted) setCategories(list)
+      } catch {
+        if (!signal.aborted) setCategoryError(true)
+      }
+    }
+
+    void loadCategories()
+    return () => controller.abort()
+  }, [categoryAttempt])
+
+  function retryCategories() {
+    setCategoryError(false)
+    setCategoryAttempt((attempt) => attempt + 1)
+  }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -64,7 +91,31 @@ export default function CatalogPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold sm:text-3xl">Product Catalog</h1>
-      <SearchInput value={searchText} onChange={changeSearchText} placeholder="Enter a product name" />
+      <div className="grid items-start gap-4 sm:grid-cols-2">
+        <SearchInput value={searchText} onChange={changeSearchText} placeholder="Enter a product name" />
+        <div className="space-y-2">
+          <CategorySelector
+            categories={categories ?? []}
+            value={selectedCategory}
+            onChange={setSelectedCategory}
+            disabled={categories === null}
+          />
+          {categoryError ? (
+            <div className="space-y-2 text-sm">
+              <p role="alert">We couldn’t load categories.</p>
+              <button
+                type="button"
+                onClick={retryCategories}
+                className="rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
+              >
+                Retry categories
+              </button>
+            </div>
+          ) : categories === null && (
+            <p role="status" className="text-sm text-neutral-600">Loading categories…</p>
+          )}
+        </div>
+      </div>
       {!currentResult && (
         <p role="status" className="text-neutral-600">{query ? 'Searching products…' : 'Loading products…'}</p>
       )}
