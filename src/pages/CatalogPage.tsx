@@ -4,59 +4,70 @@ import ProductCard from '../components/product/ProductCard'
 import SearchInput from '../components/ui/SearchInput'
 import type { Product } from '../types/product'
 
+interface CatalogRequest {
+  query: string
+  immediate: boolean
+}
+
+type CatalogResult =
+  | { request: CatalogRequest; products: Product[] }
+  | { request: CatalogRequest; error: string }
+
 export default function CatalogPage() {
   const [searchText, setSearchText] = useState('')
-  const [products, setProducts] = useState<Product[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [attempt, setAttempt] = useState(0)
-  const query = searchText.trim()
+  const [request, setRequest] = useState<CatalogRequest>({ query: '', immediate: true })
+  const [result, setResult] = useState<CatalogResult | null>(null)
+  const { query } = request
+  const currentResult = result?.request === request ? result : null
+  const error = currentResult && 'error' in currentResult ? currentResult.error : null
+  const products = currentResult && 'products' in currentResult ? currentResult.products : null
 
   useEffect(() => {
     const controller = new AbortController()
     const { signal } = controller
+    const { query, immediate } = request
 
     async function loadProducts() {
       try {
         const response = await (query ? searchProducts(query, signal) : fetchProducts(signal))
         if (!signal.aborted) {
-          setProducts(response.products)
+          setResult({ request, products: response.products })
         }
       } catch {
         if (!signal.aborted) {
-          setError('We couldn’t load the products. Please try again.')
-        }
-      } finally {
-        if (!signal.aborted) {
-          setIsLoading(false)
+          setResult({ request, error: 'We couldn’t load the products. Please try again.' })
         }
       }
     }
 
-    void loadProducts()
-    return () => controller.abort()
-  }, [query, attempt])
+    const timer = immediate ? undefined : setTimeout(() => void loadProducts(), 400)
+    if (immediate) void loadProducts()
 
-  function startLoading() {
-    setError(null)
-    setIsLoading(true)
-  }
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
+  }, [request])
 
   function changeSearchText(value: string) {
-    if (value.trim() !== query) startLoading()
     setSearchText(value)
+    const nextQuery = value.trim()
+    if (nextQuery !== query) {
+      setRequest({ query: nextQuery, immediate: nextQuery === '' })
+    }
   }
 
   function retry() {
-    startLoading()
-    setAttempt((previous) => previous + 1)
+    setRequest({ query, immediate: true })
   }
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold sm:text-3xl">Product Catalog</h1>
       <SearchInput value={searchText} onChange={changeSearchText} placeholder="Enter a product name" />
-      {isLoading && <p role="status" className="text-neutral-600">Loading products…</p>}
+      {!currentResult && (
+        <p role="status" className="text-neutral-600">{query ? 'Searching products…' : 'Loading products…'}</p>
+      )}
       {error && (
         <div className="space-y-3 rounded-lg border border-neutral-200 bg-white p-4">
           <p role="alert">{error}</p>
@@ -69,9 +80,24 @@ export default function CatalogPage() {
           </button>
         </div>
       )}
-      {!isLoading && !error && (
+      {products && (
         products.length === 0 ? (
-          <p role="status" className="text-neutral-600">No products are available right now.</p>
+          query ? (
+            <div className="space-y-3">
+              <p role="status" className="break-words text-neutral-600">
+                No products found for “{query}”. Try another search.
+              </p>
+              <button
+                type="button"
+                onClick={() => changeSearchText('')}
+                className="rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
+              >
+                Clear search
+              </button>
+            </div>
+          ) : (
+            <p role="status" className="text-neutral-600">No products are available right now.</p>
+          )
         ) : (
           <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((product) => (
