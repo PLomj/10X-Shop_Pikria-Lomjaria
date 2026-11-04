@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchProducts } from '../api/products'
+import { fetchProducts, searchProducts } from '../api/products'
 import ProductCard from '../components/product/ProductCard'
 import SearchInput from '../components/ui/SearchInput'
 import type { Product } from '../types/product'
@@ -10,6 +10,7 @@ export default function CatalogPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
+  const query = searchText.trim()
 
   useEffect(() => {
     const controller = new AbortController()
@@ -17,7 +18,7 @@ export default function CatalogPage() {
 
     async function loadProducts() {
       try {
-        const response = await fetchProducts(signal)
+        const response = await (query ? searchProducts(query, signal) : fetchProducts(signal))
         if (!signal.aborted) {
           setProducts(response.products)
         }
@@ -34,18 +35,27 @@ export default function CatalogPage() {
 
     void loadProducts()
     return () => controller.abort()
-  }, [attempt])
+  }, [query, attempt])
 
-  function retry() {
+  function startLoading() {
     setError(null)
     setIsLoading(true)
+  }
+
+  function changeSearchText(value: string) {
+    if (value.trim() !== query) startLoading()
+    setSearchText(value)
+  }
+
+  function retry() {
+    startLoading()
     setAttempt((previous) => previous + 1)
   }
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold sm:text-3xl">Product Catalog</h1>
-      <SearchInput value={searchText} onChange={setSearchText} placeholder="Enter a product name" />
+      <SearchInput value={searchText} onChange={changeSearchText} placeholder="Enter a product name" />
       {isLoading && <p role="status" className="text-neutral-600">Loading products…</p>}
       {error && (
         <div className="space-y-3 rounded-lg border border-neutral-200 bg-white p-4">

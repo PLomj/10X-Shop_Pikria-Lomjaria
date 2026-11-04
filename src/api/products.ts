@@ -45,8 +45,8 @@ function isProductsResponse(value: unknown): value is ProductsResponse {
   )
 }
 
-export async function fetchProducts(signal?: AbortSignal): Promise<ProductsResponse> {
-  const response = await fetch(productsUrl, { signal })
+async function fetchProductList(url: string, signal?: AbortSignal): Promise<ProductsResponse> {
+  const response = await fetch(url, { signal })
 
   if (!response.ok) {
     throw new Error(`Product request failed (HTTP ${response.status}).`)
@@ -58,6 +58,15 @@ export async function fetchProducts(signal?: AbortSignal): Promise<ProductsRespo
   }
 
   return data
+}
+
+export function fetchProducts(signal?: AbortSignal): Promise<ProductsResponse> {
+  return fetchProductList(productsUrl, signal)
+}
+
+export function searchProducts(query: string, signal?: AbortSignal): Promise<ProductsResponse> {
+  const params = new URLSearchParams({ q: query })
+  return fetchProductList(`${productsUrl}/search?${params}`, signal)
 }
 
 export async function fetchProductById(id: number, signal?: AbortSignal): Promise<Product> {
