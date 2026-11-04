@@ -6,6 +6,7 @@ import CartPage from '../pages/CartPage'
 import LoginPage from '../pages/LoginPage'
 import CheckoutPage from '../pages/CheckoutPage'
 import NotFoundPage from '../pages/NotFoundPage'
+import ProtectedRoute from './ProtectedRoute'
 
 export default function AppRoutes() {
   return (
@@ -15,7 +16,9 @@ export default function AppRoutes() {
         <Route path="products/:id" element={<ProductDetailsPage />} />
         <Route path="cart" element={<CartPage />} />
         <Route path="login" element={<LoginPage />} />
-        <Route path="checkout" element={<CheckoutPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="checkout" element={<CheckoutPage />} />
+        </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
