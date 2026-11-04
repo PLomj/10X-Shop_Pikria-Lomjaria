@@ -22,6 +22,12 @@ export default function CartPage() {
             <dt className="font-bold">Total</dt>
             <dd className="text-right font-bold">{formatPrice(cartTotal)}</dd>
           </dl>
+          <Link
+            to="/checkout"
+            className="ml-auto block w-full max-w-xs rounded-md bg-neutral-900 px-4 py-2 text-center font-medium text-white hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-4"
+          >
+            Proceed to Checkout
+          </Link>
         </>
       )}
       <Link to="/" className="inline-block rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">
