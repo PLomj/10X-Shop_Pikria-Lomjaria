@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { fetchProducts } from '../api/products'
 import ProductCard from '../components/product/ProductCard'
+import SearchInput from '../components/ui/SearchInput'
 import type { Product } from '../types/product'
 
 export default function CatalogPage() {
+  const [searchText, setSearchText] = useState('')
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -43,6 +45,7 @@ export default function CatalogPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold sm:text-3xl">Product Catalog</h1>
+      <SearchInput value={searchText} onChange={setSearchText} placeholder="Enter a product name" />
       {isLoading && <p role="status" className="text-neutral-600">Loading products…</p>}
       {error && (
         <div className="space-y-3 rounded-lg border border-neutral-200 bg-white p-4">
