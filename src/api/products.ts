@@ -1,4 +1,4 @@
-import type { Product, ProductsResponse } from '../types/product'
+import type { Product, ProductCategory, ProductsResponse } from '../types/product'
 
 const productsUrl = 'https://dummyjson.com/products'
 
@@ -11,6 +11,15 @@ export class ProductNotFoundError extends Error {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
+}
+
+function isProductCategory(value: unknown): value is ProductCategory {
+  return (
+    isRecord(value) &&
+    typeof value.slug === 'string' &&
+    typeof value.name === 'string' &&
+    typeof value.url === 'string'
+  )
 }
 
 function isProduct(value: unknown): value is Product {
@@ -67,6 +76,21 @@ export function fetchProducts(signal?: AbortSignal): Promise<ProductsResponse> {
 export function searchProducts(query: string, signal?: AbortSignal): Promise<ProductsResponse> {
   const params = new URLSearchParams({ q: query })
   return fetchProductList(`${productsUrl}/search?${params}`, signal)
+}
+
+export async function getProductCategories(signal?: AbortSignal): Promise<ProductCategory[]> {
+  const response = await fetch(`${productsUrl}/categories`, { signal })
+
+  if (!response.ok) {
+    throw new Error(`Category request failed (HTTP ${response.status}).`)
+  }
+
+  const data: unknown = await response.json()
+  if (!Array.isArray(data) || !data.every(isProductCategory)) {
+    throw new Error('The category API returned an unexpected response.')
+  }
+
+  return data
 }
 
 export async function fetchProductById(id: number, signal?: AbortSignal): Promise<Product> {
