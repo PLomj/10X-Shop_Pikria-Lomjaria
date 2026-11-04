@@ -7,3 +7,7 @@ export function formatPrice(price: number) {
 export function priceInCents(price: number) {
   return Math.round(price * 100)
 }
+
+export function lineSubtotal(price: number, quantity: number) {
+  return priceInCents(price) * quantity / 100
+}

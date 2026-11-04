@@ -1,13 +1,13 @@
 import { Link } from 'react-router'
 import { useCart } from '../../context/CartContext'
 import type { CartItem } from '../../types/cart'
-import { formatPrice, priceInCents } from '../../utils/currency'
+import { formatPrice, lineSubtotal } from '../../utils/currency'
 
 const quantityButton = 'size-10 rounded-md border border-neutral-300 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50'
 
 export default function CartItemRow({ item }: { item: CartItem }) {
   const { increaseQuantity, decreaseQuantity, removeFromCart } = useCart()
-  const subtotal = priceInCents(item.price) * item.quantity / 100
+  const subtotal = lineSubtotal(item.price, item.quantity)
 
   return (
     <li className="flex flex-wrap items-center gap-4 rounded-lg border border-neutral-200 bg-white p-4">
