@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchProducts, getProductCategories, searchProducts } from '../api/products'
+import { fetchProducts, getProductCategories, getProductsByCategory, searchProducts } from '../api/products'
 import ProductCard from '../components/product/ProductCard'
 import SearchInput from '../components/ui/SearchInput'
 import CategorySelector from '../components/ui/CategorySelector'
@@ -7,6 +7,7 @@ import type { Product, ProductCategory } from '../types/product'
 
 interface CatalogRequest {
   query: string
+  category: string
   immediate: boolean
 }
 
@@ -17,12 +18,11 @@ type CatalogResult =
 export default function CatalogPage() {
   const [searchText, setSearchText] = useState('')
   const [categories, setCategories] = useState<ProductCategory[] | null>(null)
-  const [selectedCategory, setSelectedCategory] = useState('')
   const [categoryError, setCategoryError] = useState(false)
   const [categoryAttempt, setCategoryAttempt] = useState(0)
-  const [request, setRequest] = useState<CatalogRequest>({ query: '', immediate: true })
+  const [request, setRequest] = useState<CatalogRequest>({ query: '', category: '', immediate: true })
   const [result, setResult] = useState<CatalogResult | null>(null)
-  const { query } = request
+  const { query, category } = request
   const currentResult = result?.request === request ? result : null
   const error = currentResult && 'error' in currentResult ? currentResult.error : null
   const products = currentResult && 'products' in currentResult ? currentResult.products : null
@@ -52,11 +52,13 @@ export default function CatalogPage() {
   useEffect(() => {
     const controller = new AbortController()
     const { signal } = controller
-    const { query, immediate } = request
+    const { query, category, immediate } = request
 
     async function loadProducts() {
       try {
-        const response = await (query ? searchProducts(query, signal) : fetchProducts(signal))
+        const response = await (category
+          ? getProductsByCategory(category, signal)
+          : query ? searchProducts(query, signal) : fetchProducts(signal))
         if (!signal.aborted) {
           setResult({ request, products: response.products })
         }
@@ -80,12 +82,17 @@ export default function CatalogPage() {
     setSearchText(value)
     const nextQuery = value.trim()
     if (nextQuery !== query) {
-      setRequest({ query: nextQuery, immediate: nextQuery === '' })
+      setRequest({ query: nextQuery, category: '', immediate: nextQuery === '' })
     }
   }
 
+  function changeCategory(slug: string) {
+    setSearchText('')
+    setRequest({ query: '', category: slug, immediate: true })
+  }
+
   function retry() {
-    setRequest({ query, immediate: true })
+    setRequest({ ...request, immediate: true })
   }
 
   return (
@@ -96,8 +103,8 @@ export default function CatalogPage() {
         <div className="space-y-2">
           <CategorySelector
             categories={categories ?? []}
-            value={selectedCategory}
-            onChange={setSelectedCategory}
+            value={category}
+            onChange={changeCategory}
             disabled={categories === null}
           />
           {categoryError ? (
@@ -147,7 +154,9 @@ export default function CatalogPage() {
               </button>
             </div>
           ) : (
-            <p role="status" className="text-neutral-600">No products are available right now.</p>
+            <p role="status" className="text-neutral-600">
+              {category ? 'No products are available in this category.' : 'No products are available right now.'}
+            </p>
           )
         ) : (
           <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

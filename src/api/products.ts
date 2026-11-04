@@ -78,6 +78,10 @@ export function searchProducts(query: string, signal?: AbortSignal): Promise<Pro
   return fetchProductList(`${productsUrl}/search?${params}`, signal)
 }
 
+export function getProductsByCategory(categorySlug: string, signal?: AbortSignal): Promise<ProductsResponse> {
+  return fetchProductList(`${productsUrl}/category/${encodeURIComponent(categorySlug)}`, signal)
+}
+
 export async function getProductCategories(signal?: AbortSignal): Promise<ProductCategory[]> {
   const response = await fetch(`${productsUrl}/categories`, { signal })
 
