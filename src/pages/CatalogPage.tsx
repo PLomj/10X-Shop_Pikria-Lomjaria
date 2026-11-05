@@ -3,7 +3,8 @@ import { fetchProducts, getProductCategories, getProductsByCategory, searchProdu
 import ProductCard from '../components/product/ProductCard'
 import SearchInput from '../components/ui/SearchInput'
 import CategorySelector from '../components/ui/CategorySelector'
-import type { Product, ProductCategory } from '../types/product'
+import SortSelector from '../components/ui/SortSelector'
+import type { Product, ProductCategory, ProductSortOption } from '../types/product'
 
 interface CatalogRequest {
   query: string
@@ -17,6 +18,7 @@ type CatalogResult =
 
 export default function CatalogPage() {
   const [searchText, setSearchText] = useState('')
+  const [sortOption, setSortOption] = useState<ProductSortOption>('default')
   const [categories, setCategories] = useState<ProductCategory[] | null>(null)
   const [categoryError, setCategoryError] = useState(false)
   const [categoryAttempt, setCategoryAttempt] = useState(0)
@@ -98,7 +100,7 @@ export default function CatalogPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold sm:text-3xl">Product Catalog</h1>
-      <div className="grid items-start gap-4 sm:grid-cols-2">
+      <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <SearchInput value={searchText} onChange={changeSearchText} placeholder="Enter a product name" />
         <div className="space-y-2">
           <CategorySelector
@@ -122,6 +124,7 @@ export default function CatalogPage() {
             <p role="status" className="text-sm text-neutral-600">Loading categories…</p>
           )}
         </div>
+        <SortSelector value={sortOption} onChange={setSortOption} />
       </div>
       {!currentResult && (
         <p role="status" className="text-neutral-600">{query ? 'Searching products…' : 'Loading products…'}</p>

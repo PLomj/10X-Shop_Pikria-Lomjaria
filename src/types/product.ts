@@ -24,3 +24,10 @@ export interface ProductCategory {
   name: string
   url: string
 }
+
+export type ProductSortOption =
+  | 'default'
+  | 'price-asc'
+  | 'price-desc'
+  | 'rating-desc'
+  | 'title-asc'
