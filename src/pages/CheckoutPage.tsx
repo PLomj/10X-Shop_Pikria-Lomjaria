@@ -14,7 +14,7 @@ const fields = [
 const linkStyle = 'inline-block rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4'
 
 export default function CheckoutPage() {
-  const { cartItems, cartTotal, clearCart } = useCart()
+  const { cartItems, cartTotal, cartSummary, clearCart } = useCart()
   const [values, setValues] = useState<CheckoutFormValues>({ fullName: '', email: '', address: '', city: '' })
   const [errors, setErrors] = useState<CheckoutFormErrors>({})
   const [confirmation, setConfirmation] = useState<OrderConfirmation | null>(null)
@@ -86,7 +86,20 @@ export default function CheckoutPage() {
               </li>
             ))}
           </ul>
-          <p className="border-t border-neutral-200 pt-3 font-bold">Order total: {formatPrice(cartTotal)}</p>
+          <dl className="grid grid-cols-2 gap-2 border-t border-neutral-200 pt-3">
+            <dt>Subtotal</dt>
+            <dd className="text-right">{formatPrice(cartSummary.subtotal)}</dd>
+            {cartSummary.discount > 0 && (
+              <>
+                <dt>Promo discount</dt>
+                <dd className="text-right">−{formatPrice(cartSummary.discount)}</dd>
+              </>
+            )}
+            <dt>Shipping</dt>
+            <dd className="text-right">{formatPrice(cartSummary.shipping)}</dd>
+            <dt className="font-bold">Order total</dt>
+            <dd className="text-right font-bold">{formatPrice(cartTotal)}</dd>
+          </dl>
         </section>
         <form onSubmit={handleSubmit} noValidate className="space-y-4 rounded-lg border border-neutral-200 bg-white p-4 sm:p-6">
           <h2 className="text-lg font-semibold">Shipping and contact details</h2>

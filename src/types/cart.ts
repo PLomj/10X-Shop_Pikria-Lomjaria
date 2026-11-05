@@ -15,6 +15,13 @@ export interface CartState {
   promoCode: string | null
 }
 
+export interface CartSummary {
+  subtotal: number
+  discount: number
+  shipping: number
+  total: number
+}
+
 export type CartAction =
   | { type: 'ADD_ITEM'; item: CartItem }
   | { type: 'SET_QTY'; productId: number; quantity: number }
@@ -27,6 +34,7 @@ export interface CartContextValue {
   cartItems: CartItem[]
   cartItemCount: number
   cartTotal: number
+  cartSummary: CartSummary
   addToCart: (product: Product, quantity?: number) => boolean
   removeFromCart: (productId: number) => void
   increaseQuantity: (productId: number) => void

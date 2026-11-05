@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext'
 import { formatPrice } from '../utils/currency'
 
 export default function CartPage() {
-  const { cartItems, cartTotal } = useCart()
+  const { cartItems, cartTotal, cartSummary } = useCart()
 
   return (
     <div className="space-y-6">
@@ -18,7 +18,15 @@ export default function CartPage() {
           </ul>
           <dl className="ml-auto grid max-w-xs grid-cols-2 gap-2 rounded-lg border border-neutral-200 bg-white p-4">
             <dt>Subtotal</dt>
-            <dd className="text-right">{formatPrice(cartTotal)}</dd>
+            <dd className="text-right">{formatPrice(cartSummary.subtotal)}</dd>
+            {cartSummary.discount > 0 && (
+              <>
+                <dt>Promo discount</dt>
+                <dd className="text-right">−{formatPrice(cartSummary.discount)}</dd>
+              </>
+            )}
+            <dt>Shipping</dt>
+            <dd className="text-right">{formatPrice(cartSummary.shipping)}</dd>
             <dt className="font-bold">Total</dt>
             <dd className="text-right font-bold">{formatPrice(cartTotal)}</dd>
           </dl>

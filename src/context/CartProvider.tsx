@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import type { CartAction, CartItem } from '../types/cart'
 import type { Product } from '../types/product'
 import { loadCart, saveCart } from '../utils/cartStorage'
-import { discountedPrice, priceInCents } from '../utils/currency'
+import { calculateCartSummary } from '../utils/cartCalculations'
 import { CartContext } from './CartContext'
 import { cartReducer } from './cartReducer'
 
@@ -11,6 +11,7 @@ export default function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, undefined, loadCart)
   const latestState = useRef(state)
   const cartItems = state.items
+  const cartSummary = calculateCartSummary(state)
 
   // Preview the same pure transition for immediate success feedback. Every action
   // goes through here so batched clicks see all previously accepted actions.
@@ -49,7 +50,8 @@ export default function CartProvider({ children }: { children: ReactNode }) {
     <CartContext.Provider value={{
       cartItems,
       cartItemCount: cartItems.reduce((count, item) => count + item.quantity, 0),
-      cartTotal: cartItems.reduce((cents, item) => cents + priceInCents(discountedPrice(item.price, item.discountPercentage)) * item.quantity, 0) / 100,
+      cartTotal: cartSummary.total,
+      cartSummary,
       addToCart,
       removeFromCart: (productId) => { sendAction({ type: 'REMOVE_ITEM', productId }) },
       increaseQuantity: (productId) => changeQuantity(productId, 1),
