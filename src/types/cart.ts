@@ -22,8 +22,14 @@ export interface CartSummary {
   total: number
 }
 
+export interface CartPriceChange {
+  existingQuantity: number
+  previousUnitPrice: number
+  currentUnitPrice: number
+}
+
 export type CartAction =
-  | { type: 'ADD_ITEM'; item: CartItem }
+  | { type: 'ADD_ITEM'; item: CartItem; refreshProduct?: boolean }
   | { type: 'SET_QTY'; productId: number; quantity: number }
   | { type: 'REMOVE_ITEM'; productId: number }
   | { type: 'CLEAR' }
@@ -39,6 +45,7 @@ export interface CartContextValue {
   applyPromo: (code: string) => boolean
   removePromo: () => void
   addToCart: (product: Product, quantity?: number) => boolean
+  addAvailableToCart: (product: Product, requestedQuantity: number, onRepriced?: (change: CartPriceChange) => void) => number
   removeFromCart: (productId: number) => void
   increaseQuantity: (productId: number) => void
   decreaseQuantity: (productId: number) => void

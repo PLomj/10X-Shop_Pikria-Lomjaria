@@ -13,7 +13,7 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
         ...state,
         items: existing
           ? state.items.map((entry) => entry.productId === item.productId
-            ? { ...entry, stock: item.stock, quantity }
+            ? action.refreshProduct ? { ...item, quantity } : { ...entry, stock: item.stock, quantity }
             : entry)
           : [...state.items, { ...item }],
       }

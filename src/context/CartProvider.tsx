@@ -1,11 +1,12 @@
 import { useEffect, useReducer, useRef } from 'react'
 import type { ReactNode } from 'react'
-import type { CartAction, CartItem } from '../types/cart'
+import type { CartAction, CartItem, CartPriceChange } from '../types/cart'
 import type { Product } from '../types/product'
 import { loadCart, saveCart } from '../utils/cartStorage'
 import { calculateCartSummary } from '../utils/cartCalculations'
 import { CartContext } from './CartContext'
 import { cartReducer } from './cartReducer'
+import { discountedPrice } from '../utils/currency'
 
 export default function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, undefined, loadCart)
@@ -46,6 +47,33 @@ export default function CartProvider({ children }: { children: ReactNode }) {
     sendAction({ type: 'SET_QTY', productId, quantity: item.quantity + change })
   }
 
+  function addAvailableToCart(
+    product: Product,
+    requestedQuantity: number,
+    onRepriced?: (change: CartPriceChange) => void,
+  ): number {
+    if (!Number.isSafeInteger(requestedQuantity) || requestedQuantity < 1 ||
+      !Number.isSafeInteger(product.stock) || product.stock < 0) return 0
+    const existing = latestState.current.items.find((item) => item.productId === product.id)
+    const accepted = Math.min(requestedQuantity, Math.max(0, product.stock - (existing?.quantity ?? 0)))
+    if (accepted === 0) return 0
+    const item: CartItem = {
+      productId: product.id, title: product.title, thumbnail: product.thumbnail,
+      price: product.price, discountPercentage: product.discountPercentage,
+      stock: product.stock, quantity: accepted,
+    }
+    if (!sendAction({ type: 'ADD_ITEM', item, refreshProduct: true })) return 0
+    // Report the exact row used by the atomic transition, not a stale component value.
+    if (existing && (existing.price !== product.price || existing.discountPercentage !== product.discountPercentage)) {
+      onRepriced?.({
+        existingQuantity: existing.quantity,
+        previousUnitPrice: discountedPrice(existing.price, existing.discountPercentage),
+        currentUnitPrice: discountedPrice(product.price, product.discountPercentage),
+      })
+    }
+    return accepted
+  }
+
   function applyPromo(code: string): boolean {
     const normalizedCode = code.trim().toUpperCase()
     if (normalizedCode !== '10X10') return false
@@ -64,6 +92,7 @@ export default function CartProvider({ children }: { children: ReactNode }) {
       applyPromo,
       removePromo: () => { sendAction({ type: 'REMOVE_PROMO' }) },
       addToCart,
+      addAvailableToCart,
       removeFromCart: (productId) => { sendAction({ type: 'REMOVE_ITEM', productId }) },
       increaseQuantity: (productId) => changeQuantity(productId, 1),
       decreaseQuantity: (productId) => changeQuantity(productId, -1),

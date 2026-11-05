@@ -1,11 +1,18 @@
-import { Link } from 'react-router'
+import { useState } from 'react'
+import { Link, useLocation } from 'react-router'
 import CartItemRow from '../components/cart/CartItemRow'
 import PromoCodeForm from '../components/cart/PromoCodeForm'
 import { useCart } from '../context/CartContext'
 import { formatPrice } from '../utils/currency'
+import { isReorderResult } from '../types/reorder'
 
 export default function CartPage() {
   const { cartItems, cartTotal, cartSummary, promoCode, applyPromo, removePromo, clearCart } = useCart()
+  const location = useLocation()
+  const [dismissedKey, setDismissedKey] = useState<string | null>(null)
+  const state: unknown = location.state
+  const result = typeof state === 'object' && state !== null && 'reorderResult' in state &&
+    isReorderResult(state.reorderResult) ? state.reorderResult : null
 
   function handleClearCart() {
     if (window.confirm('Clear the cart? This cannot be undone.')) {
@@ -16,6 +23,22 @@ export default function CartPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold sm:text-3xl">Shopping Cart</h1>
+      {result && dismissedKey !== location.key && (
+        <section aria-label="Reorder result" className="space-y-3 rounded-lg border border-neutral-300 bg-white p-4">
+          <div role={result.outcome === 'failure' ? 'alert' : 'status'} className="space-y-2">
+            <p className="font-semibold">{result.outcome === 'success' ? 'Items added to cart ✓' : result.outcome === 'partial' ? 'Some items were added to your cart.' : 'No items were added to your cart.'}</p>
+            <ul className="list-inside list-disc space-y-2 break-words">
+              {result.items.map((item) => (
+                <li key={item.productId}>
+                  {item.title}: requested {item.requestedQuantity}, added {item.addedQuantity}, skipped {item.skippedQuantity}. {item.reason}
+                  {item.repricing && <p className="mt-1 text-sm">Current pricing was applied to the {item.repricing.existingQuantity} units already in your cart (unit price {formatPrice(item.repricing.previousUnitPrice)} → {formatPrice(item.repricing.currentUnitPrice)}; base price or discount changed).</p>}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <button type="button" onClick={() => setDismissedKey(location.key)} className="rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2">Dismiss</button>
+        </section>
+      )}
       {cartItems.length === 0 ? (
         <div className="space-y-3">
           <p className="text-neutral-600">Your cart is empty.</p>

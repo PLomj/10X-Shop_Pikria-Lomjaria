@@ -4,6 +4,7 @@ import { checkoutCountries } from '../utils/checkoutValidation'
 import { formatPrice } from '../utils/currency'
 import { getOrderStatus } from '../utils/orderStatus'
 import NotFoundPage from './NotFoundPage'
+import ReorderButton from '../components/orders/ReorderButton'
 
 const steps = [
   { status: 'processing', label: 'Processing' },
@@ -42,6 +43,7 @@ export default function OrderDetailsPage() {
           <h1 className="break-words text-2xl font-bold sm:text-3xl">Order {order.reference}</h1>
           {justPlaced && <p role="status" className="rounded-lg border border-neutral-300 bg-white p-4">Thank you! Your order has been placed.</p>}
           <p>Order date: <time dateTime={order.createdAt}>{new Date(order.createdAt).toLocaleString()}</time></p>
+          <ReorderButton key={order.reference} order={order} />
           <section aria-labelledby="order-status-heading" className="space-y-3">
             <h2 id="order-status-heading" className="text-lg font-semibold">Order status</h2>
             <p role="status">{steps[currentStep]?.label}</p>
