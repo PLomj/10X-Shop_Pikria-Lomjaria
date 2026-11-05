@@ -57,6 +57,7 @@ export default function OrderConfirmation({ order }: { order: OrderSnapshot }) {
         <dt>Shipping</dt><dd className="text-right">{formatPrice(summary.shipping)}</dd>
         <dt className="font-bold">Order total</dt><dd className="text-right font-bold">{formatPrice(summary.total)}</dd>
       </dl>
+      <Link to={`/orders/${encodeURIComponent(order.reference)}`} state={{ justPlaced: order.reference }} className="mr-4 inline-block rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">View order</Link>
       <Link to="/" className="inline-block rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">Continue shopping</Link>
     </div>
   )

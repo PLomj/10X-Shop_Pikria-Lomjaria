@@ -3,11 +3,29 @@ import { useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../context/AuthContext'
 import type { LoginFormValues } from '../types/auth'
 
+function hasControlCharacters(value: string) {
+  return [...value].some((character) => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127)
+}
+
+function isSafeDestinationPath(pathname: string) {
+  if (hasControlCharacters(pathname) || /[\\?#]/.test(pathname)) return false
+  if (/^\/(?:checkout|orders)\/?$/i.test(pathname)) return true
+  const match = /^\/orders\/([^/]+)\/?$/i.exec(pathname)
+  if (!match) return false
+  try {
+    const reference = decodeURIComponent(match[1])
+    return reference !== '.' && reference !== '..' && !hasControlCharacters(reference) &&
+      !/[\\/?#]/.test(reference) && !/%[0-9a-f]{2}/i.test(reference)
+  } catch {
+    return false
+  }
+}
+
 function getDestination(state: unknown) {
   if (typeof state !== 'object' || state === null || !('from' in state)) return '/'
   const { from } = state
   if (typeof from !== 'object' || from === null || !('pathname' in from) ||
-    typeof from.pathname !== 'string' || !/^\/checkout\/?$/i.test(from.pathname)) {
+    typeof from.pathname !== 'string' || !isSafeDestinationPath(from.pathname)) {
     return '/'
   }
 
