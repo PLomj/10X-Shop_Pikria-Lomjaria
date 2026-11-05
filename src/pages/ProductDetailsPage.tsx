@@ -4,12 +4,18 @@ import { fetchProductById, ProductNotFoundError } from '../api/products'
 import ProductGallery from '../components/product/ProductGallery'
 import { ProductPrice } from '../components/product/ProductCard'
 import ProductPurchaseControls from '../components/product/ProductPurchaseControls'
+import ProductDetailsSkeleton from '../components/product/ProductDetailsSkeleton'
+import NotFoundPage from './NotFoundPage'
 import type { Product } from '../types/product'
 
+type ProductRequestState =
+  | { status: 'loading' }
+  | { status: 'success'; product: Product }
+  | { status: 'not-found' }
+  | { status: 'error' }
+
 function ProductDetails({ id }: { id: number }) {
-  const [product, setProduct] = useState<Product | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [failure, setFailure] = useState<'not-found' | 'request' | null>(null)
+  const [state, setState] = useState<ProductRequestState>({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
@@ -19,13 +25,11 @@ function ProductDetails({ id }: { id: number }) {
     async function loadProduct() {
       try {
         const result = await fetchProductById(id, signal)
-        if (!signal.aborted) setProduct(result)
+        if (!signal.aborted) setState({ status: 'success', product: result })
       } catch (error) {
         if (!signal.aborted) {
-          setFailure(error instanceof ProductNotFoundError ? 'not-found' : 'request')
+          setState({ status: error instanceof ProductNotFoundError ? 'not-found' : 'error' })
         }
-      } finally {
-        if (!signal.aborted) setIsLoading(false)
       }
     }
 
@@ -34,18 +38,17 @@ function ProductDetails({ id }: { id: number }) {
   }, [id, attempt])
 
   function retry() {
-    setFailure(null)
-    setIsLoading(true)
+    setState({ status: 'loading' })
     setAttempt((previous) => previous + 1)
   }
 
-  if (isLoading) return <p role="status">Loading product…</p>
+  if (state.status === 'loading') return <ProductDetailsSkeleton />
 
-  if (failure === 'not-found') {
-    return <h1 className="text-2xl font-bold">Product not found</h1>
+  if (state.status === 'not-found') {
+    return <NotFoundPage />
   }
 
-  if (!product) {
+  if (state.status === 'error') {
     return (
       <div className="space-y-3">
         <h1 className="text-2xl font-bold">Product unavailable</h1>
@@ -60,6 +63,8 @@ function ProductDetails({ id }: { id: number }) {
       </div>
     )
   }
+
+  const { product } = state
 
   return (
     <article className="grid items-start gap-6 md:grid-cols-2 md:gap-10">
@@ -114,12 +119,7 @@ export default function ProductDetailsPage() {
       }} className="inline-block rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">
         Back to Catalog
       </Link>
-      {isValidId ? <ProductDetails key={productId} id={productId} /> : (
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold">Invalid product ID</h1>
-          <p className="text-neutral-600">Choose a product from the catalog to view its details.</p>
-        </div>
-      )}
+      {isValidId ? <ProductDetails key={productId} id={productId} /> : <NotFoundPage />}
     </div>
   )
 }
