@@ -1,17 +1,15 @@
-import { useEffect, useMemo, useState } from 'react'
-import { fetchProductsPage, getProductCategories, getProductsByCategory, searchProducts } from '../api/products'
+import { useEffect, useState } from 'react'
+import { fetchProductsPage, getProductCategories, getProductsByCategory, productPageSize, searchProducts } from '../api/products'
 import ProductCard from '../components/product/ProductCard'
 import SearchInput from '../components/ui/SearchInput'
 import CategorySelector from '../components/ui/CategorySelector'
 import SortSelector from '../components/ui/SortSelector'
 import Pagination from '../components/ui/Pagination'
 import type { ProductsResponse, ProductCategory, ProductSortOption } from '../types/product'
-import { sortProducts } from '../utils/sortProducts'
-
-const pageSize = 10
 
 interface CatalogRequest {
   page: number
+  sort: ProductSortOption
   query: string
   category: string
   immediate: boolean
@@ -23,11 +21,10 @@ type CatalogResult =
 
 export default function CatalogPage() {
   const [searchText, setSearchText] = useState('')
-  const [sortOption, setSortOption] = useState<ProductSortOption>('default')
   const [categories, setCategories] = useState<ProductCategory[] | null>(null)
   const [categoryError, setCategoryError] = useState(false)
   const [categoryAttempt, setCategoryAttempt] = useState(0)
-  const [request, setRequest] = useState<CatalogRequest>({ page: 1, query: '', category: '', immediate: true })
+  const [request, setRequest] = useState<CatalogRequest>({ page: 1, sort: 'default', query: '', category: '', immediate: true })
   const [result, setResult] = useState<CatalogResult | null>(null)
   const { query, category } = request
   const currentResult = result?.request === request ? result : null
@@ -35,14 +32,9 @@ export default function CatalogPage() {
   const response = currentResult && 'response' in currentResult ? currentResult.response : null
   const products = response?.products ?? null
   // The final response may report fewer items than the requested page size.
-  const totalPages = response ? Math.ceil(response.total / pageSize) : 0
-  const currentPage = response ? Math.floor(response.skip / pageSize) + 1 : request.page
+  const totalPages = response ? Math.ceil(response.total / productPageSize) : 0
+  const currentPage = response ? Math.floor(response.skip / productPageSize) + 1 : request.page
   const invalidPage = response !== null && request.page > Math.max(1, totalPages)
-  // Sorting applies only to the loaded API batch, not the entire remote catalog.
-  const displayedProducts = useMemo(
-    () => products === null ? null : sortProducts(products, sortOption),
-    [products, sortOption],
-  )
 
   useEffect(() => {
     const controller = new AbortController()
@@ -69,13 +61,13 @@ export default function CatalogPage() {
   useEffect(() => {
     const controller = new AbortController()
     const { signal } = controller
-    const { query, category, immediate, page } = request
+    const { query, category, immediate, page, sort } = request
 
     async function loadProducts() {
       try {
         const response = await (category
-          ? getProductsByCategory(category, signal, { page, limit: pageSize })
-          : query ? searchProducts(query, signal, { page, limit: pageSize }) : fetchProductsPage(page, pageSize, signal))
+          ? getProductsByCategory(category, signal, { page, limit: productPageSize }, sort)
+          : query ? searchProducts(query, signal, { page, limit: productPageSize }, sort) : fetchProductsPage(page, productPageSize, signal, sort))
         if (!signal.aborted) {
           setResult({ request, response })
         }
@@ -99,13 +91,18 @@ export default function CatalogPage() {
     setSearchText(value)
     const nextQuery = value.trim()
     if (nextQuery !== query) {
-      setRequest({ page: 1, query: nextQuery, category: '', immediate: nextQuery === '' })
+      setRequest({ page: 1, sort: request.sort, query: nextQuery, category: '', immediate: nextQuery === '' })
     }
   }
 
   function changeCategory(slug: string) {
     setSearchText('')
-    setRequest({ page: 1, query: '', category: slug, immediate: true })
+    setRequest({ page: 1, sort: request.sort, query: '', category: slug, immediate: true })
+  }
+
+  function changeSort(sort: ProductSortOption) {
+    if (sort === request.sort) return
+    setRequest({ ...request, sort, page: 1, immediate: true })
   }
 
   function changePage(page: number) {
@@ -144,7 +141,7 @@ export default function CatalogPage() {
             <p role="status" className="text-sm text-neutral-600">Loading categories…</p>
           )}
         </div>
-        <SortSelector value={sortOption} onChange={setSortOption} />
+        <SortSelector value={request.sort} onChange={changeSort} />
       </div>
       {!currentResult && (
         <p role="status" className="text-neutral-600">{query ? 'Searching products…' : 'Loading products…'}</p>
@@ -191,7 +188,7 @@ export default function CatalogPage() {
           )
         ) : (
           <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {displayedProducts?.map((product) => (
+            {products.map((product) => (
               <li key={product.id}>
                 <ProductCard product={product} />
               </li>

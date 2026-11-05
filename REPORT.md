@@ -60,3 +60,15 @@ Also check an invalid ID, a nonexistent product, a product with several images, 
 ## Limitations and future work
 
 The catalog depends on DummyJSON and shows its default batch. The cart is browser-local, login resets on refresh, and order confirmations exist only for the current page session. Full browser acceptance and hosted verification remain open. Future FULL work includes search, filters, pagination, richer product information, stock rules, promotions, shipping, order history, and profile management.
+
+## PRD P2.6 and P2.7 correction
+
+The approved correction supersedes the earlier page-local sorting plan. Catalog requests now use a shared page size of 12. Sort selection is part of the request state and resets to page 1 while preserving the active Search or Category mode. Default omits sorting parameters. Other options map to API sortBy and order parameters.
+
+Live endpoint checks confirmed price ascending, price descending, and rating descending ordering across the complete default, phone-search and smartphones-category result sets. Sorted pages at skips 0 and 12 matched slices of the respective complete sorted API responses. Title sorting also produced consistent server page slices, with server collation differing from plain JavaScript localeCompare. Its numeric-looking titles can appear in natural numeric order. The API title order is preserved.
+
+The standalone sortProducts utility is retained only as a documented fallback for endpoints proven unable to sort. Catalog currently uses server sorting for all three modes. Network failures continue to use error and Retry behavior. Sorting a loaded page alone cannot provide globally ordered pagination, so any future fallback must explicitly disclose that limitation.
+
+After the correction, lint and build passed. Mocked checks covered all four non-default API parameter mappings, omission for Default, and 12-item pagination defaults in all modes. Live calls through the updated functions confirmed ascending prices across pages 1 and 2. Observed totals were 194 catalog items, 23 phone search results, and 16 smartphones, producing 17, 2, and 2 pages. Search and Category final pages contained 11 and 4 items. The sandbox initially blocked DNS; the approved retry with network access passed.
+
+A controlled handler check confirmed sorting from page 2 resets to page 1 and preserves the active Search or Category mode. Mode changes retained the chosen sort. Browser interaction and hosted regression checks remain pending. Existing historical browser checklists above describe CORE review and should be supplemented by the current pagination and sorting checks.

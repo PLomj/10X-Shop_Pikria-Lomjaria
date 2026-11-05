@@ -1,5 +1,8 @@
 import type { Product, ProductSortOption } from '../types/product'
 
+// Fallback for an endpoint proven unable to sort. This only orders loaded items,
+// so callers must disclose that it does not provide globally sorted pagination.
+// Current Catalog endpoints support server sorting and do not use this fallback.
 export function sortProducts(products: readonly Product[], option: ProductSortOption): readonly Product[] {
   switch (option) {
     case 'default':

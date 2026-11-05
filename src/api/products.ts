@@ -1,4 +1,28 @@
-import type { Product, ProductCategory, ProductsResponse } from '../types/product'
+import type { Product, ProductCategory, ProductsResponse, ProductSortOption } from '../types/product'
+
+export const productPageSize = 12
+
+function addSortParams(params: URLSearchParams, sort: ProductSortOption) {
+  switch (sort) {
+    case 'default':
+      return
+    case 'price-asc':
+      params.set('sortBy', 'price')
+      params.set('order', 'asc')
+      return
+    case 'price-desc':
+      params.set('sortBy', 'price')
+      params.set('order', 'desc')
+      return
+    case 'rating-desc':
+      params.set('sortBy', 'rating')
+      params.set('order', 'desc')
+      return
+    case 'title-asc':
+      params.set('sortBy', 'title')
+      params.set('order', 'asc')
+  }
+}
 
 const productsUrl = 'https://dummyjson.com/products'
 
@@ -91,10 +115,12 @@ function paginationParams(page: number, limit: number): URLSearchParams {
 
 export async function fetchProductsPage(
   page: number,
-  limit = 10,
+  limit = productPageSize,
   signal?: AbortSignal,
+  sort: ProductSortOption = 'default',
 ): Promise<ProductsResponse> {
   const params = paginationParams(page, limit)
+  addSortParams(params, sort)
   return fetchProductList(`${productsUrl}?${params}`, signal)
 }
 
@@ -107,9 +133,11 @@ export async function searchProducts(
   query: string,
   signal?: AbortSignal,
   pagination?: PaginationOptions,
+  sort: ProductSortOption = 'default',
 ): Promise<ProductsResponse> {
-  const params = pagination ? paginationParams(pagination.page, pagination.limit ?? 10) : new URLSearchParams()
+  const params = pagination ? paginationParams(pagination.page, pagination.limit ?? productPageSize) : new URLSearchParams()
   params.set('q', query)
+  addSortParams(params, sort)
   return fetchProductList(`${productsUrl}/search?${params}`, signal)
 }
 
@@ -117,9 +145,12 @@ export async function getProductsByCategory(
   categorySlug: string,
   signal?: AbortSignal,
   pagination?: PaginationOptions,
+  sort: ProductSortOption = 'default',
 ): Promise<ProductsResponse> {
-  const params = pagination ? `?${paginationParams(pagination.page, pagination.limit ?? 10)}` : ''
-  return fetchProductList(`${productsUrl}/category/${encodeURIComponent(categorySlug)}${params}`, signal)
+  const params = pagination ? paginationParams(pagination.page, pagination.limit ?? productPageSize) : new URLSearchParams()
+  addSortParams(params, sort)
+  const suffix = params.size > 0 ? `?${params}` : ''
+  return fetchProductList(`${productsUrl}/category/${encodeURIComponent(categorySlug)}${suffix}`, signal)
 }
 
 export async function getProductCategories(signal?: AbortSignal): Promise<ProductCategory[]> {
