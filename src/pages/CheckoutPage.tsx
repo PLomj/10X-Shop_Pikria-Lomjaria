@@ -1,9 +1,11 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import OrderConfirmationView from '../components/checkout/OrderConfirmation'
 import { useCart } from '../context/CartContext'
 import type { CheckoutFormValues, OrderConfirmation } from '../types/checkout'
 import { checkoutCountries, validateCheckout } from '../utils/checkoutValidation'
 import { formatPrice, lineSubtotal } from '../utils/currency'
+import { createOrderSnapshot } from '../utils/createOrderSnapshot'
 
 const fields = [
   { name: 'fullName', label: 'Full name', type: 'text', autoComplete: 'name' },
@@ -25,6 +27,7 @@ export default function CheckoutPage() {
   const [touched, setTouched] = useState<Partial<Record<keyof CheckoutFormValues, boolean>>>({})
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [confirmation, setConfirmation] = useState<OrderConfirmation | null>(null)
+  const [submissionError, setSubmissionError] = useState('')
   const submitted = useRef(false)
   const formRef = useRef<HTMLFormElement>(null)
   const errors = validateCheckout(values)
@@ -42,8 +45,8 @@ export default function CheckoutPage() {
     if (submitted.current || cartItems.length === 0) return
 
     setHasAttemptedSubmit(true)
+    setSubmissionError('')
     const nextErrors = validateCheckout(values)
-    const fullName = values.fullName.trim()
     const firstInvalid = fields.find(({ name }) => nextErrors[name])
     if (firstInvalid) {
       const control = formRef.current?.elements.namedItem(firstInvalid.name)
@@ -51,28 +54,21 @@ export default function CheckoutPage() {
       return
     }
 
-    const order: OrderConfirmation = {
-      reference: `SHOP-${Date.now().toString(36).toUpperCase()}`,
-      customerName: fullName,
-      total: cartTotal,
-    }
     submitted.current = true
+    let order: OrderConfirmation
+    try {
+      order = createOrderSnapshot(values, cartItems, promoCode, cartSummary)
+    } catch {
+      submitted.current = false
+      setSubmissionError('Your order could not be created. Please try again.')
+      return
+    }
     setConfirmation(order)
     clearCart()
   }
 
   if (confirmation) {
-    return (
-      <div className="space-y-4 rounded-lg border border-neutral-200 bg-white p-4 sm:p-6">
-        <div role="status" className="space-y-2">
-          <h1 className="text-2xl font-bold">Order confirmed</h1>
-          <p>Thank you, {confirmation.customerName}. Your simulated order has been placed.</p>
-          <p>Order reference: {confirmation.reference}</p>
-          <p className="font-semibold">Order total: {formatPrice(confirmation.total)}</p>
-        </div>
-        <Link to="/" className={linkStyle}>Back to Catalog</Link>
-      </div>
-    )
+    return <OrderConfirmationView order={confirmation} />
   }
 
   if (cartItems.length === 0) {
@@ -117,7 +113,7 @@ export default function CheckoutPage() {
             <dd className="text-right font-bold">{formatPrice(cartTotal)}</dd>
           </dl>
         </section>
-        <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-4 rounded-lg border border-neutral-200 bg-white p-4 sm:p-6">
+        <form ref={formRef} onSubmit={handleSubmit} noValidate aria-describedby={submissionError ? 'checkout-submit-error' : undefined} className="space-y-4 rounded-lg border border-neutral-200 bg-white p-4 sm:p-6">
           <h2 className="text-lg font-semibold">Shipping and contact details</h2>
           {fields.map(({ name, label, type, autoComplete }) => {
             const inputId = `checkout-${name}`
@@ -163,6 +159,7 @@ export default function CheckoutPage() {
               </div>
             )
           })}
+          {submissionError && <p id="checkout-submit-error" role="alert" className="text-sm text-red-700">{submissionError}</p>}
           <button type="submit" className="rounded-md bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2">
             Place Order
           </button>
