@@ -5,7 +5,7 @@ import ProductGallery from '../components/product/ProductGallery'
 import { ProductPrice } from '../components/product/ProductCard'
 import ProductPurchaseControls from '../components/product/ProductPurchaseControls'
 import ProductDetailsSkeleton from '../components/product/ProductDetailsSkeleton'
-import ProductReviews from '../components/product/ProductReviews'
+import ProductDetailsTabs from '../components/product/ProductDetailsTabs'
 import RelatedProducts from '../components/product/RelatedProducts'
 import NotFoundPage from './NotFoundPage'
 import type { Product } from '../types/product'
@@ -74,7 +74,6 @@ function ProductDetails({ id }: { id: number }) {
       <div className="min-w-0 space-y-4 break-words">
         <h1 className="text-2xl font-bold sm:text-3xl">{product.title}</h1>
         <div className="text-xl"><ProductPrice product={product} /></div>
-        <p className="text-neutral-700">{product.description}</p>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
           <dt className="font-semibold">Category</dt>
           <dd>
@@ -96,7 +95,7 @@ function ProductDetails({ id }: { id: number }) {
         </dl>
         <ProductPurchaseControls key={product.id} product={product} />
       </div>
-      <ProductReviews key={product.id} product={product} />
+      <ProductDetailsTabs key={product.id} product={product} />
       <RelatedProducts key={product.id} product={product} />
     </article>
   )

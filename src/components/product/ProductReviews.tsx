@@ -1,11 +1,16 @@
 import { useMemo, useRef, useState } from 'react'
-import type { FormEvent } from 'react'
+import type { FormEvent, ReactNode } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import type { Product } from '../../types/product'
 import type { LocalReview } from '../../types/review'
 import { loadProductReviews, saveProductReview } from '../../utils/reviewStorage'
 
-export default function ProductReviews({ product }: { product: Product }) {
+interface ProductReviewsProps {
+  product: Product
+  renderContent?: (count: number, content: ReactNode) => ReactNode
+}
+
+export default function ProductReviews({ product, renderContent }: ProductReviewsProps) {
   const { user } = useAuth()
   const [localReviews, setLocalReviews] = useState(() => loadProductReviews(product.id))
   const [rating, setRating] = useState('')
@@ -53,7 +58,7 @@ export default function ProductReviews({ product }: { product: Product }) {
 
   const inputStyle = 'w-full rounded-md border border-neutral-400 bg-white px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2'
 
-  return (
+  const content = (
     <section aria-labelledby="product-reviews-heading" className="space-y-6 border-t border-neutral-200 pt-6 md:col-span-2">
       <div className="space-y-2">
         <h2 id="product-reviews-heading" className="text-xl font-semibold">Reviews ({summary.reviews.length})</h2>
@@ -101,4 +106,6 @@ export default function ProductReviews({ product }: { product: Product }) {
       </form>
     </section>
   )
+
+  return renderContent ? renderContent(summary.reviews.length, content) : content
 }
