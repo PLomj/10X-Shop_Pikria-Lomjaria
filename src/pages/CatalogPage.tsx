@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { fetchProductsPage, getProductCategories, getProductsByCategory, productPageSize, searchProducts } from '../api/products'
 import ProductCard from '../components/product/ProductCard'
 import SearchInput from '../components/ui/SearchInput'
@@ -6,6 +7,7 @@ import CategorySelector from '../components/ui/CategorySelector'
 import SortSelector from '../components/ui/SortSelector'
 import Pagination from '../components/ui/Pagination'
 import type { ProductsResponse, ProductCategory, ProductSortOption } from '../types/product'
+import { parseCatalogSearchParams } from '../utils/catalogSearchParams'
 
 interface CatalogRequest {
   page: number
@@ -20,11 +22,16 @@ type CatalogResult =
   | { request: CatalogRequest; error: string }
 
 export default function CatalogPage() {
-  const [searchText, setSearchText] = useState('')
+  const [searchParams] = useSearchParams()
+  // Step 12.1 reads the URL on mount. Control-to-URL synchronization follows later.
+  const [searchText, setSearchText] = useState(() => parseCatalogSearchParams(searchParams).query)
   const [categories, setCategories] = useState<ProductCategory[] | null>(null)
   const [categoryError, setCategoryError] = useState(false)
   const [categoryAttempt, setCategoryAttempt] = useState(0)
-  const [request, setRequest] = useState<CatalogRequest>({ page: 1, sort: 'default', query: '', category: '', immediate: true })
+  const [request, setRequest] = useState<CatalogRequest>(() => ({
+    ...parseCatalogSearchParams(searchParams),
+    immediate: true,
+  }))
   const [result, setResult] = useState<CatalogResult | null>(null)
   const { query, category } = request
   const currentResult = result?.request === request ? result : null
@@ -35,6 +42,7 @@ export default function CatalogPage() {
   const totalPages = response ? Math.ceil(response.total / productPageSize) : 0
   const currentPage = response ? Math.floor(response.skip / productPageSize) + 1 : request.page
   const invalidPage = response !== null && request.page > Math.max(1, totalPages)
+  const categoryReady = !request.category || categories !== null
 
   useEffect(() => {
     const controller = new AbortController()
@@ -43,7 +51,12 @@ export default function CatalogPage() {
     async function loadCategories() {
       try {
         const list = await getProductCategories(signal)
-        if (!signal.aborted) setCategories(list)
+        if (!signal.aborted) {
+          setCategories(list)
+          setRequest((current) => current.category && !list.some(({ slug }) => slug === current.category)
+            ? { ...current, category: '', page: 1 }
+            : current)
+        }
       } catch {
         if (!signal.aborted) setCategoryError(true)
       }
@@ -59,6 +72,7 @@ export default function CatalogPage() {
   }
 
   useEffect(() => {
+    if (!categoryReady) return
     const controller = new AbortController()
     const { signal } = controller
     const { query, category, immediate, page, sort } = request
@@ -85,7 +99,7 @@ export default function CatalogPage() {
       clearTimeout(timer)
       controller.abort()
     }
-  }, [request])
+  }, [request, categoryReady])
 
   function changeSearchText(value: string) {
     setSearchText(value)
