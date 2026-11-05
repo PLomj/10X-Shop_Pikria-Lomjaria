@@ -1,3 +1,5 @@
+import type { ProductReview } from './review'
+
 export interface Product {
   id: number
   title: string
@@ -10,6 +12,7 @@ export interface Product {
   category: string
   thumbnail: string
   images?: string[]
+  reviews?: ProductReview[]
 }
 
 export interface ProductsResponse {

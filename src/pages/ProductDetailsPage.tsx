@@ -5,6 +5,7 @@ import ProductGallery from '../components/product/ProductGallery'
 import { ProductPrice } from '../components/product/ProductCard'
 import ProductPurchaseControls from '../components/product/ProductPurchaseControls'
 import ProductDetailsSkeleton from '../components/product/ProductDetailsSkeleton'
+import ProductReviews from '../components/product/ProductReviews'
 import NotFoundPage from './NotFoundPage'
 import type { Product } from '../types/product'
 
@@ -85,7 +86,7 @@ function ProductDetails({ id }: { id: number }) {
           </dd>
           {product.brand && <><dt className="font-semibold">Brand</dt><dd>{product.brand}</dd></>}
           {product.rating !== undefined && (
-            <><dt className="font-semibold">Rating</dt><dd>{product.rating} / 5</dd></>
+            <><dt className="font-semibold">API rating</dt><dd>{product.rating} / 5</dd></>
           )}
           <dt className="font-semibold">Availability</dt>
           <dd className={product.stock === 0 ? 'font-medium text-red-700' : product.stock <= 5 ? 'font-medium text-amber-800' : ''}>
@@ -94,6 +95,7 @@ function ProductDetails({ id }: { id: number }) {
         </dl>
         <ProductPurchaseControls key={product.id} product={product} />
       </div>
+      <ProductReviews key={product.id} product={product} />
     </article>
   )
 }

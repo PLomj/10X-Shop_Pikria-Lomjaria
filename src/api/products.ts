@@ -1,4 +1,5 @@
 import type { Product, ProductCategory, ProductsResponse, ProductSortOption } from '../types/product'
+import { isProductReview } from '../types/review'
 
 export const productPageSize = 12
 
@@ -62,6 +63,7 @@ function isProduct(value: unknown): value is Product {
     typeof value.stock === 'number' &&
     typeof value.category === 'string' &&
     typeof value.thumbnail === 'string' &&
+    (value.reviews === undefined || (Array.isArray(value.reviews) && value.reviews.every(isProductReview))) &&
     (value.images === undefined || (
       Array.isArray(value.images) &&
       value.images.every((image: unknown) => typeof image === 'string')
