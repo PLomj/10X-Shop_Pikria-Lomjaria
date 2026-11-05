@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fetchProducts, getProductCategories, getProductsByCategory, searchProducts } from '../api/products'
 import ProductCard from '../components/product/ProductCard'
 import SearchInput from '../components/ui/SearchInput'
 import CategorySelector from '../components/ui/CategorySelector'
 import SortSelector from '../components/ui/SortSelector'
 import type { Product, ProductCategory, ProductSortOption } from '../types/product'
+import { sortProducts } from '../utils/sortProducts'
 
 interface CatalogRequest {
   query: string
@@ -28,6 +29,11 @@ export default function CatalogPage() {
   const currentResult = result?.request === request ? result : null
   const error = currentResult && 'error' in currentResult ? currentResult.error : null
   const products = currentResult && 'products' in currentResult ? currentResult.products : null
+  // Sorting applies only to the loaded API batch, not the entire remote catalog.
+  const displayedProducts = useMemo(
+    () => products === null ? null : sortProducts(products, sortOption),
+    [products, sortOption],
+  )
 
   useEffect(() => {
     const controller = new AbortController()
@@ -163,7 +169,7 @@ export default function CatalogPage() {
           )
         ) : (
           <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => (
+            {displayedProducts?.map((product) => (
               <li key={product.id}>
                 <ProductCard product={product} />
               </li>
