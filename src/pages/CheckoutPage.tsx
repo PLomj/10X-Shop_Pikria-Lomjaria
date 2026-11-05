@@ -82,7 +82,7 @@ export default function CheckoutPage() {
                   <p className="font-medium">{item.title}</p>
                   <p className="text-sm text-neutral-600">Quantity: {item.quantity}</p>
                 </div>
-                <p>Subtotal: {formatPrice(lineSubtotal(item.price, item.quantity))}</p>
+                <p>Subtotal: {formatPrice(lineSubtotal(item.price, item.quantity, item.discountPercentage))}</p>
               </li>
             ))}
           </ul>

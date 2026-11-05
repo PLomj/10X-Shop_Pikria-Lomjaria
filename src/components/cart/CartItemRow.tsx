@@ -1,13 +1,13 @@
 import { Link } from 'react-router'
 import { useCart } from '../../context/CartContext'
 import type { CartItem } from '../../types/cart'
-import { formatPrice, lineSubtotal } from '../../utils/currency'
+import { discountedPrice, formatPrice, lineSubtotal } from '../../utils/currency'
 
 const quantityButton = 'size-10 rounded-md border border-neutral-300 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50'
 
 export default function CartItemRow({ item }: { item: CartItem }) {
   const { increaseQuantity, decreaseQuantity, removeFromCart } = useCart()
-  const subtotal = lineSubtotal(item.price, item.quantity)
+  const subtotal = lineSubtotal(item.price, item.quantity, item.discountPercentage)
 
   return (
     <li className="flex flex-wrap items-center gap-4 rounded-lg border border-neutral-200 bg-white p-4">
@@ -20,7 +20,7 @@ export default function CartItemRow({ item }: { item: CartItem }) {
         <Link to={`/products/${item.productId}`} className="font-semibold underline-offset-4 hover:underline focus-visible:outline-2">
           {item.title}
         </Link>
-        <p className="text-sm text-neutral-600">{formatPrice(item.price)} each</p>
+        <p className="text-sm text-neutral-600">{formatPrice(discountedPrice(item.price, item.discountPercentage))} each</p>
       </div>
       <div role="group" aria-label={`Quantity for ${item.title}`} className="flex items-center gap-3">
         <button type="button" className={quantityButton} disabled={item.quantity === 1} aria-label={`Decrease quantity of ${item.title}`} onClick={() => decreaseQuantity(item.productId)}>−</button>

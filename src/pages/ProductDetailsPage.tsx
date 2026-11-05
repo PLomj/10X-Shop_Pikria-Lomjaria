@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { fetchProductById, ProductNotFoundError } from '../api/products'
 import ProductGallery from '../components/product/ProductGallery'
-import { AddToCartButton } from '../components/product/ProductCard'
+import { AddToCartButton, ProductPrice } from '../components/product/ProductCard'
 import type { Product } from '../types/product'
-import { formatPrice } from '../utils/currency'
 
 function ProductDetails({ id }: { id: number }) {
   const [product, setProduct] = useState<Product | null>(null)
@@ -63,20 +62,24 @@ function ProductDetails({ id }: { id: number }) {
 
   return (
     <article className="grid items-start gap-6 md:grid-cols-2 md:gap-10">
-      <ProductGallery product={product} />
-      <div className="space-y-4">
+      <ProductGallery key={product.id} product={product} />
+      <div className="min-w-0 space-y-4 break-words">
         <h1 className="text-2xl font-bold sm:text-3xl">{product.title}</h1>
-        <p className="text-xl font-semibold">{formatPrice(product.price)}</p>
+        <div className="text-xl"><ProductPrice product={product} /></div>
         <p className="text-neutral-700">{product.description}</p>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
           <dt className="font-semibold">Category</dt>
-          <dd>{product.category}</dd>
+          <dd>
+            <Link
+              to={`/?${new URLSearchParams({ category: product.category, page: '1' })}`}
+              className="rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              {product.category}
+            </Link>
+          </dd>
           {product.brand && <><dt className="font-semibold">Brand</dt><dd>{product.brand}</dd></>}
           {product.rating !== undefined && (
             <><dt className="font-semibold">Rating</dt><dd>{product.rating} / 5</dd></>
-          )}
-          {product.discountPercentage !== undefined && (
-            <><dt className="font-semibold">Discount</dt><dd>{product.discountPercentage}%</dd></>
           )}
           <dt className="font-semibold">Availability</dt>
           <dd>{product.stock > 0 ? `In stock (${product.stock})` : 'Out of stock'}</dd>
@@ -88,13 +91,24 @@ function ProductDetails({ id }: { id: number }) {
 }
 
 export default function ProductDetailsPage() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const navigationState: unknown = location.state
+  const fromCatalog = typeof navigationState === 'object' && navigationState !== null &&
+    'fromCatalog' in navigationState && navigationState.fromCatalog === true
   const { id } = useParams()
   const productId = id && /^\d+$/.test(id) ? Number(id) : NaN
   const isValidId = Number.isSafeInteger(productId) && productId > 0
 
   return (
     <div className="space-y-6">
-      <Link to="/" className="inline-block rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">
+      <Link to="/" onClick={(event) => {
+        // A new tab has no earlier entry in this router, even if link state exists.
+        if (fromCatalog && typeof window !== 'undefined' && window.history.state?.idx > 0) {
+          event.preventDefault()
+          navigate(-1)
+        }
+      }} className="inline-block rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">
         Back to Catalog
       </Link>
       {isValidId ? <ProductDetails key={productId} id={productId} /> : (

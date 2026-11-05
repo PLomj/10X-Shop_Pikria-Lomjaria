@@ -3,11 +3,11 @@ import type { Product } from '../../types/product'
 
 export default function ProductGallery({ product }: { product: Product }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const images = [...new Set(product.images.filter(Boolean))]
+  const images = [...new Set((product.images ?? []).filter((image) => image.trim().length > 0))]
   const mainImage = images[selectedIndex] ?? product.thumbnail
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       {mainImage ? (
         <img
           src={mainImage}
@@ -17,7 +17,7 @@ export default function ProductGallery({ product }: { product: Product }) {
       ) : (
         <p className="rounded-lg bg-white p-4 text-neutral-600">No product image available.</p>
       )}
-      {images.length > 1 && (
+      {images.length > 0 && (
         <ul className="flex flex-wrap gap-2" aria-label="Product images">
           {images.map((image, index) => (
             <li key={image}>

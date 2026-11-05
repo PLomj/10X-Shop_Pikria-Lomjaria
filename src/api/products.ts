@@ -62,8 +62,10 @@ function isProduct(value: unknown): value is Product {
     typeof value.stock === 'number' &&
     typeof value.category === 'string' &&
     typeof value.thumbnail === 'string' &&
-    Array.isArray(value.images) &&
-    value.images.every((image: unknown) => typeof image === 'string')
+    (value.images === undefined || (
+      Array.isArray(value.images) &&
+      value.images.every((image: unknown) => typeof image === 'string')
+    ))
   )
 }
 

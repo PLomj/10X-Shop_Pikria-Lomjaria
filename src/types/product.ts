@@ -9,7 +9,7 @@ export interface Product {
   stock: number
   category: string
   thumbnail: string
-  images: string[]
+  images?: string[]
 }
 
 export interface ProductsResponse {

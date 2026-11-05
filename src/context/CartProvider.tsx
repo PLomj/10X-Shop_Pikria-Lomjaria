@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import type { CartItem } from '../types/cart'
 import type { Product } from '../types/product'
 import { isCartItem, loadCart, saveCart } from '../utils/cartStorage'
-import { priceInCents } from '../utils/currency'
+import { discountedPrice, priceInCents } from '../utils/currency'
 import { CartContext } from './CartContext'
 
 function nextQuantity(quantity: number, change: number) {
@@ -50,7 +50,7 @@ export default function CartProvider({ children }: { children: ReactNode }) {
     <CartContext.Provider value={{
       cartItems,
       cartItemCount: cartItems.reduce((count, item) => count + item.quantity, 0),
-      cartTotal: cartItems.reduce((cents, item) => cents + priceInCents(item.price) * item.quantity, 0) / 100,
+      cartTotal: cartItems.reduce((cents, item) => cents + priceInCents(discountedPrice(item.price, item.discountPercentage)) * item.quantity, 0) / 100,
       addToCart,
       removeFromCart: (productId) => setCartItems((items) => items.filter((item) => item.productId !== productId)),
       increaseQuantity: (productId) => changeQuantity(productId, 1),
