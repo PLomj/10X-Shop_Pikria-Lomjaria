@@ -35,6 +35,9 @@ export interface CartContextValue {
   cartItemCount: number
   cartTotal: number
   cartSummary: CartSummary
+  promoCode: string | null
+  applyPromo: (code: string) => boolean
+  removePromo: () => void
   addToCart: (product: Product, quantity?: number) => boolean
   removeFromCart: (productId: number) => void
   increaseQuantity: (productId: number) => void

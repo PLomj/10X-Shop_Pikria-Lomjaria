@@ -46,12 +46,23 @@ export default function CartProvider({ children }: { children: ReactNode }) {
     sendAction({ type: 'SET_QTY', productId, quantity: item.quantity + change })
   }
 
+  function applyPromo(code: string): boolean {
+    const normalizedCode = code.trim().toUpperCase()
+    if (normalizedCode !== '10X10') return false
+    // Reapplying a valid active code is successful, even without a state change.
+    sendAction({ type: 'APPLY_PROMO', code: normalizedCode })
+    return true
+  }
+
   return (
     <CartContext.Provider value={{
       cartItems,
       cartItemCount: cartItems.reduce((count, item) => count + item.quantity, 0),
       cartTotal: cartSummary.total,
       cartSummary,
+      promoCode: state.promoCode,
+      applyPromo,
+      removePromo: () => { sendAction({ type: 'REMOVE_PROMO' }) },
       addToCart,
       removeFromCart: (productId) => { sendAction({ type: 'REMOVE_ITEM', productId }) },
       increaseQuantity: (productId) => changeQuantity(productId, 1),

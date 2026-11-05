@@ -14,7 +14,7 @@ const fields = [
 const linkStyle = 'inline-block rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4'
 
 export default function CheckoutPage() {
-  const { cartItems, cartTotal, cartSummary, clearCart } = useCart()
+  const { cartItems, cartTotal, cartSummary, promoCode, clearCart } = useCart()
   const [values, setValues] = useState<CheckoutFormValues>({ fullName: '', email: '', address: '', city: '' })
   const [errors, setErrors] = useState<CheckoutFormErrors>({})
   const [confirmation, setConfirmation] = useState<OrderConfirmation | null>(null)
@@ -89,9 +89,9 @@ export default function CheckoutPage() {
           <dl className="grid grid-cols-2 gap-2 border-t border-neutral-200 pt-3">
             <dt>Subtotal</dt>
             <dd className="text-right">{formatPrice(cartSummary.subtotal)}</dd>
-            {cartSummary.discount > 0 && (
+            {promoCode && (
               <>
-                <dt>Promo discount</dt>
+                <dt>Discount ({promoCode} −10%)</dt>
                 <dd className="text-right">−{formatPrice(cartSummary.discount)}</dd>
               </>
             )}
