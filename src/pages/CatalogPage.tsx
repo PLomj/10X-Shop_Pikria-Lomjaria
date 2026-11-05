@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router'
 import { fetchProductsPage, getProductCategories, getProductsByCategory, productPageSize, searchProducts } from '../api/products'
-import ProductCard from '../components/product/ProductCard'
+import ProductGrid from '../components/product/ProductGrid'
 import SearchInput from '../components/ui/SearchInput'
 import CategorySelector from '../components/ui/CategorySelector'
 import SortSelector from '../components/ui/SortSelector'
@@ -208,13 +208,7 @@ export default function CatalogPage() {
             </p>
           )
         ) : (
-          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => (
-              <li key={product.id}>
-                <ProductCard product={product} />
-              </li>
-            ))}
-          </ul>
+          <ProductGrid products={products} />
         )
       )}
       {products && products.length > 0 && !invalidPage && (

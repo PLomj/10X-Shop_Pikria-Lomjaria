@@ -6,6 +6,7 @@ import { ProductPrice } from '../components/product/ProductCard'
 import ProductPurchaseControls from '../components/product/ProductPurchaseControls'
 import ProductDetailsSkeleton from '../components/product/ProductDetailsSkeleton'
 import ProductReviews from '../components/product/ProductReviews'
+import RelatedProducts from '../components/product/RelatedProducts'
 import NotFoundPage from './NotFoundPage'
 import type { Product } from '../types/product'
 
@@ -96,6 +97,7 @@ function ProductDetails({ id }: { id: number }) {
         <ProductPurchaseControls key={product.id} product={product} />
       </div>
       <ProductReviews key={product.id} product={product} />
+      <RelatedProducts key={product.id} product={product} />
     </article>
   )
 }
