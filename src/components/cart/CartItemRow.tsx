@@ -25,7 +25,7 @@ export default function CartItemRow({ item }: { item: CartItem }) {
       <div role="group" aria-label={`Quantity for ${item.title}`} className="flex items-center gap-3">
         <button type="button" className={quantityButton} disabled={item.quantity === 1} aria-label={`Decrease quantity of ${item.title}`} onClick={() => decreaseQuantity(item.productId)}>−</button>
         <span>{item.quantity}</span>
-        <button type="button" className={quantityButton} aria-label={`Increase quantity of ${item.title}`} onClick={() => increaseQuantity(item.productId)}>+</button>
+        <button type="button" className={quantityButton} disabled={item.quantity >= item.stock} aria-label={`Increase quantity of ${item.title}`} onClick={() => increaseQuantity(item.productId)}>+</button>
       </div>
       <p className="font-semibold">Subtotal {formatPrice(subtotal)}</p>
       <button

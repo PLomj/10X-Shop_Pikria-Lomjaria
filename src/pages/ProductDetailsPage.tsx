@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { fetchProductById, ProductNotFoundError } from '../api/products'
 import ProductGallery from '../components/product/ProductGallery'
-import { AddToCartButton, ProductPrice } from '../components/product/ProductCard'
+import { ProductPrice } from '../components/product/ProductCard'
+import ProductPurchaseControls from '../components/product/ProductPurchaseControls'
 import type { Product } from '../types/product'
 
 function ProductDetails({ id }: { id: number }) {
@@ -82,9 +83,11 @@ function ProductDetails({ id }: { id: number }) {
             <><dt className="font-semibold">Rating</dt><dd>{product.rating} / 5</dd></>
           )}
           <dt className="font-semibold">Availability</dt>
-          <dd>{product.stock > 0 ? `In stock (${product.stock})` : 'Out of stock'}</dd>
+          <dd className={product.stock === 0 ? 'font-medium text-red-700' : product.stock <= 5 ? 'font-medium text-amber-800' : ''}>
+            {product.stock === 0 ? 'Out of stock' : product.stock <= 5 ? `Only ${product.stock} left!` : 'In stock'}
+          </dd>
         </dl>
-        <AddToCartButton product={product} />
+        <ProductPurchaseControls key={product.id} product={product} />
       </div>
     </article>
   )

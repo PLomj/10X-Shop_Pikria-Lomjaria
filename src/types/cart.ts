@@ -16,7 +16,7 @@ export interface CartContextValue {
   cartItems: CartState
   cartItemCount: number
   cartTotal: number
-  addToCart: (product: Product) => boolean
+  addToCart: (product: Product, quantity?: number) => boolean
   removeFromCart: (productId: number) => void
   increaseQuantity: (productId: number) => void
   decreaseQuantity: (productId: number) => void

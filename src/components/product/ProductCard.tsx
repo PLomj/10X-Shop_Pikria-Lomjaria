@@ -25,16 +25,19 @@ export function ProductPrice({ product }: { product: Product }) {
 }
 
 export function AddToCartButton({ product }: { product: Product }) {
-  const { addToCart } = useCart()
+  const { addToCart, cartItems } = useCart()
+  const quantityInCart = cartItems.find((item) => item.productId === product.id)?.quantity ?? 0
+  const unavailable = product.stock <= quantityInCart
   const [feedback, setFeedback] = useState<'added' | 'error' | null>(null)
 
   return (
     <div className="space-y-2">
       <button
         type="button"
+        disabled={unavailable}
         aria-label={`Add ${product.title} to cart`}
         onClick={() => setFeedback(addToCart(product) ? 'added' : 'error')}
-        className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-4"
+        className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-4 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Add to Cart
       </button>
@@ -42,6 +45,7 @@ export function AddToCartButton({ product }: { product: Product }) {
         {feedback === 'added' && 'Added to cart.'}
         {feedback === 'error' && 'This product could not be added.'}
       </p>
+      {unavailable && <p className="text-sm text-neutral-600">{product.stock === 0 ? 'Out of stock' : 'No additional stock available.'}</p>}
     </div>
   )
 }
