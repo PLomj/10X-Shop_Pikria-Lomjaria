@@ -73,11 +73,7 @@ export function fetchProducts(signal?: AbortSignal): Promise<ProductsResponse> {
   return fetchProductList(productsUrl, signal)
 }
 
-export async function fetchProductsPage(
-  page: number,
-  limit = 10,
-  signal?: AbortSignal,
-): Promise<ProductsResponse> {
+function paginationParams(page: number, limit: number): URLSearchParams {
   if (!Number.isSafeInteger(page) || page < 1) {
     throw new Error('Page must be a positive safe integer.')
   }
@@ -90,17 +86,40 @@ export async function fetchProductsPage(
     throw new Error('The requested page offset is too large.')
   }
 
-  const params = new URLSearchParams({ limit: String(limit), skip: String(skip) })
+  return new URLSearchParams({ limit: String(limit), skip: String(skip) })
+}
+
+export async function fetchProductsPage(
+  page: number,
+  limit = 10,
+  signal?: AbortSignal,
+): Promise<ProductsResponse> {
+  const params = paginationParams(page, limit)
   return fetchProductList(`${productsUrl}?${params}`, signal)
 }
 
-export function searchProducts(query: string, signal?: AbortSignal): Promise<ProductsResponse> {
-  const params = new URLSearchParams({ q: query })
+interface PaginationOptions {
+  page: number
+  limit?: number
+}
+
+export async function searchProducts(
+  query: string,
+  signal?: AbortSignal,
+  pagination?: PaginationOptions,
+): Promise<ProductsResponse> {
+  const params = pagination ? paginationParams(pagination.page, pagination.limit ?? 10) : new URLSearchParams()
+  params.set('q', query)
   return fetchProductList(`${productsUrl}/search?${params}`, signal)
 }
 
-export function getProductsByCategory(categorySlug: string, signal?: AbortSignal): Promise<ProductsResponse> {
-  return fetchProductList(`${productsUrl}/category/${encodeURIComponent(categorySlug)}`, signal)
+export async function getProductsByCategory(
+  categorySlug: string,
+  signal?: AbortSignal,
+  pagination?: PaginationOptions,
+): Promise<ProductsResponse> {
+  const params = pagination ? `?${paginationParams(pagination.page, pagination.limit ?? 10)}` : ''
+  return fetchProductList(`${productsUrl}/category/${encodeURIComponent(categorySlug)}${params}`, signal)
 }
 
 export async function getProductCategories(signal?: AbortSignal): Promise<ProductCategory[]> {

@@ -1,20 +1,24 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchProducts, getProductCategories, getProductsByCategory, searchProducts } from '../api/products'
+import { fetchProductsPage, getProductCategories, getProductsByCategory, searchProducts } from '../api/products'
 import ProductCard from '../components/product/ProductCard'
 import SearchInput from '../components/ui/SearchInput'
 import CategorySelector from '../components/ui/CategorySelector'
 import SortSelector from '../components/ui/SortSelector'
-import type { Product, ProductCategory, ProductSortOption } from '../types/product'
+import Pagination from '../components/ui/Pagination'
+import type { ProductsResponse, ProductCategory, ProductSortOption } from '../types/product'
 import { sortProducts } from '../utils/sortProducts'
 
+const pageSize = 10
+
 interface CatalogRequest {
+  page: number
   query: string
   category: string
   immediate: boolean
 }
 
 type CatalogResult =
-  | { request: CatalogRequest; products: Product[] }
+  | { request: CatalogRequest; response: ProductsResponse }
   | { request: CatalogRequest; error: string }
 
 export default function CatalogPage() {
@@ -23,12 +27,17 @@ export default function CatalogPage() {
   const [categories, setCategories] = useState<ProductCategory[] | null>(null)
   const [categoryError, setCategoryError] = useState(false)
   const [categoryAttempt, setCategoryAttempt] = useState(0)
-  const [request, setRequest] = useState<CatalogRequest>({ query: '', category: '', immediate: true })
+  const [request, setRequest] = useState<CatalogRequest>({ page: 1, query: '', category: '', immediate: true })
   const [result, setResult] = useState<CatalogResult | null>(null)
   const { query, category } = request
   const currentResult = result?.request === request ? result : null
   const error = currentResult && 'error' in currentResult ? currentResult.error : null
-  const products = currentResult && 'products' in currentResult ? currentResult.products : null
+  const response = currentResult && 'response' in currentResult ? currentResult.response : null
+  const products = response?.products ?? null
+  // The final response may report fewer items than the requested page size.
+  const totalPages = response ? Math.ceil(response.total / pageSize) : 0
+  const currentPage = response ? Math.floor(response.skip / pageSize) + 1 : request.page
+  const invalidPage = response !== null && request.page > Math.max(1, totalPages)
   // Sorting applies only to the loaded API batch, not the entire remote catalog.
   const displayedProducts = useMemo(
     () => products === null ? null : sortProducts(products, sortOption),
@@ -60,15 +69,15 @@ export default function CatalogPage() {
   useEffect(() => {
     const controller = new AbortController()
     const { signal } = controller
-    const { query, category, immediate } = request
+    const { query, category, immediate, page } = request
 
     async function loadProducts() {
       try {
         const response = await (category
-          ? getProductsByCategory(category, signal)
-          : query ? searchProducts(query, signal) : fetchProducts(signal))
+          ? getProductsByCategory(category, signal, { page, limit: pageSize })
+          : query ? searchProducts(query, signal, { page, limit: pageSize }) : fetchProductsPage(page, pageSize, signal))
         if (!signal.aborted) {
-          setResult({ request, products: response.products })
+          setResult({ request, response })
         }
       } catch {
         if (!signal.aborted) {
@@ -90,13 +99,18 @@ export default function CatalogPage() {
     setSearchText(value)
     const nextQuery = value.trim()
     if (nextQuery !== query) {
-      setRequest({ query: nextQuery, category: '', immediate: nextQuery === '' })
+      setRequest({ page: 1, query: nextQuery, category: '', immediate: nextQuery === '' })
     }
   }
 
   function changeCategory(slug: string) {
     setSearchText('')
-    setRequest({ query: '', category: slug, immediate: true })
+    setRequest({ page: 1, query: '', category: slug, immediate: true })
+  }
+
+  function changePage(page: number) {
+    if (!Number.isSafeInteger(page) || page < 1 || page === request.page) return
+    setRequest({ ...request, page, immediate: true })
   }
 
   function retry() {
@@ -147,7 +161,15 @@ export default function CatalogPage() {
           </button>
         </div>
       )}
-      {products && (
+      {invalidPage && (
+        <div className="space-y-2">
+          <p role="status">This page is no longer available.</p>
+          <button type="button" onClick={() => changePage(1)} className="rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2">
+            Return to page 1
+          </button>
+        </div>
+      )}
+      {products && !invalidPage && (
         products.length === 0 ? (
           query ? (
             <div className="space-y-3">
@@ -176,6 +198,9 @@ export default function CatalogPage() {
             ))}
           </ul>
         )
+      )}
+      {products && products.length > 0 && !invalidPage && (
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={changePage} />
       )}
     </div>
   )
