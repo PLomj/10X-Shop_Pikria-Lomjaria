@@ -15,3 +15,17 @@ export function parseCatalogSearchParams(params: URLSearchParams): CatalogUrlSta
 
   return { query, category, sort, page: validPage ? page : 1 }
 }
+
+export function updateCatalogSearchParams(
+  params: URLSearchParams,
+  changes: Partial<CatalogUrlState>,
+): URLSearchParams {
+  const state = { ...parseCatalogSearchParams(params), ...changes }
+  const next = new URLSearchParams(params)
+  for (const key of ['q', 'category', 'sort', 'page']) next.delete(key)
+  if (state.query) next.set('q', state.query)
+  else if (state.category) next.set('category', state.category)
+  if (state.sort !== 'default') next.set('sort', state.sort)
+  if (state.page !== 1) next.set('page', String(state.page))
+  return next
+}

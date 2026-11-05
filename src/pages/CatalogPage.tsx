@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useLocation, useSearchParams } from 'react-router'
 import { fetchProductsPage, getProductCategories, getProductsByCategory, productPageSize, searchProducts } from '../api/products'
 import ProductCard from '../components/product/ProductCard'
 import SearchInput from '../components/ui/SearchInput'
@@ -7,42 +7,35 @@ import CategorySelector from '../components/ui/CategorySelector'
 import SortSelector from '../components/ui/SortSelector'
 import Pagination from '../components/ui/Pagination'
 import type { ProductsResponse, ProductCategory, ProductSortOption } from '../types/product'
-import { parseCatalogSearchParams } from '../utils/catalogSearchParams'
-
-interface CatalogRequest {
-  page: number
-  sort: ProductSortOption
-  query: string
-  category: string
-  immediate: boolean
-}
+import { parseCatalogSearchParams, updateCatalogSearchParams } from '../utils/catalogSearchParams'
 
 type CatalogResult =
-  | { request: CatalogRequest; response: ProductsResponse }
-  | { request: CatalogRequest; error: string }
+  | { key: string; response: ProductsResponse }
+  | { key: string; error: string }
 
 export default function CatalogPage() {
-  const [searchParams] = useSearchParams()
-  // Step 12.1 reads the URL on mount. Control-to-URL synchronization follows later.
-  const [searchText, setSearchText] = useState(() => parseCatalogSearchParams(searchParams).query)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
+  const { query, category, sort, page } = parseCatalogSearchParams(searchParams)
+  const [draft, setDraft] = useState<{ text: string; locationKey: string } | null>(null)
+  const searchText = draft?.locationKey === location.key ? draft.text : query
+  const searchPending = searchText.trim() !== query
   const [categories, setCategories] = useState<ProductCategory[] | null>(null)
   const [categoryError, setCategoryError] = useState(false)
   const [categoryAttempt, setCategoryAttempt] = useState(0)
-  const [request, setRequest] = useState<CatalogRequest>(() => ({
-    ...parseCatalogSearchParams(searchParams),
-    immediate: true,
-  }))
+  const [attempt, setAttempt] = useState(0)
   const [result, setResult] = useState<CatalogResult | null>(null)
-  const { query, category } = request
-  const currentResult = result?.request === request ? result : null
+  const requestKey = JSON.stringify([query, category, sort, page, attempt])
+  const currentResult = !searchPending && result?.key === requestKey ? result : null
   const error = currentResult && 'error' in currentResult ? currentResult.error : null
   const response = currentResult && 'response' in currentResult ? currentResult.response : null
   const products = response?.products ?? null
   // The final response may report fewer items than the requested page size.
   const totalPages = response ? Math.ceil(response.total / productPageSize) : 0
-  const currentPage = response ? Math.floor(response.skip / productPageSize) + 1 : request.page
-  const invalidPage = response !== null && request.page > Math.max(1, totalPages)
-  const categoryReady = !request.category || categories !== null
+  const currentPage = response ? Math.floor(response.skip / productPageSize) + 1 : page
+  const invalidPage = response !== null && page > Math.max(1, totalPages)
+  const categoryReady = !category || categories !== null
+  const categoryValid = !category || categories?.some(({ slug }) => slug === category) === true
 
   useEffect(() => {
     const controller = new AbortController()
@@ -53,9 +46,6 @@ export default function CatalogPage() {
         const list = await getProductCategories(signal)
         if (!signal.aborted) {
           setCategories(list)
-          setRequest((current) => current.category && !list.some(({ slug }) => slug === current.category)
-            ? { ...current, category: '', page: 1 }
-            : current)
         }
       } catch {
         if (!signal.aborted) setCategoryError(true)
@@ -72,10 +62,24 @@ export default function CatalogPage() {
   }
 
   useEffect(() => {
-    if (!categoryReady) return
+    if (!categoryReady || categoryValid) return
+    setSearchParams((previous) => updateCatalogSearchParams(previous, { category: '', page: 1 }), { replace: true })
+  }, [categoryReady, categoryValid, setSearchParams])
+
+  useEffect(() => {
+    if (!draft || draft.locationKey !== location.key || !searchPending) return
+    const timer = setTimeout(() => {
+      setSearchParams((previous) => updateCatalogSearchParams(previous, {
+        query: draft.text.trim(), category: '', page: 1,
+      }), { replace: true })
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [draft, location.key, searchPending, setSearchParams])
+
+  useEffect(() => {
+    if (!categoryReady || !categoryValid || searchPending) return
     const controller = new AbortController()
     const { signal } = controller
-    const { query, category, immediate, page, sort } = request
 
     async function loadProducts() {
       try {
@@ -83,49 +87,47 @@ export default function CatalogPage() {
           ? getProductsByCategory(category, signal, { page, limit: productPageSize }, sort)
           : query ? searchProducts(query, signal, { page, limit: productPageSize }, sort) : fetchProductsPage(page, productPageSize, signal, sort))
         if (!signal.aborted) {
-          setResult({ request, response })
+          setResult({ key: requestKey, response })
         }
       } catch {
         if (!signal.aborted) {
-          setResult({ request, error: 'We couldn’t load the products. Please try again.' })
+          setResult({ key: requestKey, error: 'We couldn’t load the products. Please try again.' })
         }
       }
     }
 
-    const timer = immediate ? undefined : setTimeout(() => void loadProducts(), 400)
-    if (immediate) void loadProducts()
+    void loadProducts()
 
     return () => {
-      clearTimeout(timer)
       controller.abort()
     }
-  }, [request, categoryReady])
+  }, [query, category, sort, page, requestKey, categoryReady, categoryValid, searchPending])
 
   function changeSearchText(value: string) {
-    setSearchText(value)
-    const nextQuery = value.trim()
-    if (nextQuery !== query) {
-      setRequest({ page: 1, sort: request.sort, query: nextQuery, category: '', immediate: nextQuery === '' })
+    setDraft({ text: value, locationKey: location.key })
+    if (!value.trim() && query) {
+      setSearchParams((previous) => updateCatalogSearchParams(previous, { query: '', page: 1 }), { replace: true })
     }
   }
 
   function changeCategory(slug: string) {
-    setSearchText('')
-    setRequest({ page: 1, sort: request.sort, query: '', category: slug, immediate: true })
+    setDraft(null)
+    setSearchParams((previous) => updateCatalogSearchParams(previous, { query: '', category: slug, page: 1 }))
   }
 
   function changeSort(sort: ProductSortOption) {
-    if (sort === request.sort) return
-    setRequest({ ...request, sort, page: 1, immediate: true })
+    setDraft(null)
+    setSearchParams((previous) => updateCatalogSearchParams(previous, { sort, page: 1 }))
   }
 
   function changePage(page: number) {
-    if (!Number.isSafeInteger(page) || page < 1 || page === request.page) return
-    setRequest({ ...request, page, immediate: true })
+    if (!Number.isSafeInteger(page) || page < 1 || page === currentPage) return
+    setDraft(null)
+    setSearchParams((previous) => updateCatalogSearchParams(previous, { page }))
   }
 
   function retry() {
-    setRequest({ ...request, immediate: true })
+    setAttempt((previous) => previous + 1)
   }
 
   return (
@@ -155,7 +157,7 @@ export default function CatalogPage() {
             <p role="status" className="text-sm text-neutral-600">Loading categories…</p>
           )}
         </div>
-        <SortSelector value={request.sort} onChange={changeSort} />
+        <SortSelector value={sort} onChange={changeSort} />
       </div>
       {!currentResult && (
         <p role="status" className="text-neutral-600">{query ? 'Searching products…' : 'Loading products…'}</p>
