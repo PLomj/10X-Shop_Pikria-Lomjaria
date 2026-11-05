@@ -6,6 +6,7 @@ import type { CheckoutFormValues, OrderConfirmation } from '../types/checkout'
 import { checkoutCountries, validateCheckout } from '../utils/checkoutValidation'
 import { formatPrice, lineSubtotal } from '../utils/currency'
 import { createOrderSnapshot } from '../utils/createOrderSnapshot'
+import { saveOrder } from '../utils/orderStorage'
 
 const fields = [
   { name: 'fullName', label: 'Full name', type: 'text', autoComplete: 'name' },
@@ -29,10 +30,12 @@ export default function CheckoutPage() {
   const [confirmation, setConfirmation] = useState<OrderConfirmation | null>(null)
   const [submissionError, setSubmissionError] = useState('')
   const submitted = useRef(false)
+  const pendingOrder = useRef<{ snapshot: OrderConfirmation; sourceKey: string } | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const errors = validateCheckout(values)
 
   function changeField(name: keyof CheckoutFormValues, value: string) {
+    pendingOrder.current = null
     setValues((previous) => ({ ...previous, [name]: value }))
   }
 
@@ -57,10 +60,45 @@ export default function CheckoutPage() {
     submitted.current = true
     let order: OrderConfirmation
     try {
-      order = createOrderSnapshot(values, cartItems, promoCode, cartSummary)
+      // Fixed field order makes equivalent data match across renders and object copies.
+      // Only purchase inputs are included, not generated references or timestamps.
+      const sourceKey = JSON.stringify({
+        fields: fields.map(({ name }) => [name, values[name]]),
+        items: cartItems.map((item) => ({
+          productId: item.productId, title: item.title, price: item.price,
+          discountPercentage: item.discountPercentage, quantity: item.quantity,
+        })),
+        promoCode,
+        summary: {
+          subtotal: cartSummary.subtotal, discount: cartSummary.discount,
+          shipping: cartSummary.shipping, total: cartSummary.total,
+        },
+      })
+      if (pendingOrder.current?.sourceKey !== sourceKey) {
+        pendingOrder.current = null
+        pendingOrder.current = {
+          snapshot: createOrderSnapshot(values, cartItems, promoCode, cartSummary),
+          sourceKey,
+        }
+      }
+      order = pendingOrder.current.snapshot
     } catch {
       submitted.current = false
       setSubmissionError('Your order could not be created. Please try again.')
+      return
+    }
+
+    try {
+      const result = saveOrder(order)
+      if (result.status === 'error') {
+        submitted.current = false
+        setSubmissionError(result.error.message)
+        return
+      }
+      // Both saved and already-exists confirm this exact snapshot is persisted.
+    } catch {
+      submitted.current = false
+      setSubmissionError('Your order could not be saved. Please try again.')
       return
     }
     setConfirmation(order)
