@@ -10,10 +10,21 @@ export interface CartItem {
   quantity: number
 }
 
-export type CartState = CartItem[]
+export interface CartState {
+  items: CartItem[]
+  promoCode: string | null
+}
+
+export type CartAction =
+  | { type: 'ADD_ITEM'; item: CartItem }
+  | { type: 'SET_QTY'; productId: number; quantity: number }
+  | { type: 'REMOVE_ITEM'; productId: number }
+  | { type: 'CLEAR' }
+  | { type: 'APPLY_PROMO'; code: string }
+  | { type: 'REMOVE_PROMO' }
 
 export interface CartContextValue {
-  cartItems: CartState
+  cartItems: CartItem[]
   cartItemCount: number
   cartTotal: number
   addToCart: (product: Product, quantity?: number) => boolean

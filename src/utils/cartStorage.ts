@@ -22,25 +22,38 @@ export function isCartItem(value: unknown): value is CartItem {
 }
 
 export function loadCart(): CartState {
+  const empty: CartState = { items: [], promoCode: null }
   try {
     const saved = localStorage.getItem(storageKey)
-    if (saved === null) return []
+    if (saved === null) return empty
     const data: unknown = JSON.parse(saved)
-    if (!Array.isArray(data)) return []
+    const rows: unknown = Array.isArray(data) ? data
+      : typeof data === 'object' && data !== null && 'items' in data ? data.items : null
+    if (!Array.isArray(rows)) return empty
+
+    const storedPromo: unknown = !Array.isArray(data) && typeof data === 'object' &&
+      data !== null && 'promoCode' in data ? data.promoCode : null
+    const promoCode = typeof storedPromo === 'string' &&
+      storedPromo.trim().toUpperCase() === '10X10' ? '10X10' : null
 
     const items = new Map<number, CartItem>()
-    for (const row of data) {
+    for (const row of rows) {
       if (isCartItem(row) && !items.has(row.productId)) items.set(row.productId, row)
     }
-    return [...items.values()]
+    return {
+      items: [...items.values()]
+        .filter((item) => item.stock > 0)
+        .map((item) => ({ ...item, quantity: Math.min(item.quantity, item.stock) })),
+      promoCode,
+    }
   } catch {
-    return []
+    return empty
   }
 }
 
-export function saveCart(items: CartState) {
+export function saveCart(state: CartState) {
   try {
-    localStorage.setItem(storageKey, JSON.stringify(items))
+    localStorage.setItem(storageKey, JSON.stringify(state))
   } catch {
     // The live cart still works when storage is unavailable.
   }

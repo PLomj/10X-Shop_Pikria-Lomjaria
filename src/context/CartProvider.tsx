@@ -1,25 +1,30 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useReducer, useRef } from 'react'
 import type { ReactNode } from 'react'
-import type { CartItem } from '../types/cart'
+import type { CartAction, CartItem } from '../types/cart'
 import type { Product } from '../types/product'
-import { isCartItem, loadCart, saveCart } from '../utils/cartStorage'
+import { loadCart, saveCart } from '../utils/cartStorage'
 import { discountedPrice, priceInCents } from '../utils/currency'
 import { CartContext } from './CartContext'
+import { cartReducer } from './cartReducer'
 
 export default function CartProvider({ children }: { children: ReactNode }) {
-  const [cartItems, setCartItems] = useState(loadCart)
-  const latestItems = useRef(cartItems)
+  const [state, dispatch] = useReducer(cartReducer, undefined, loadCart)
+  const latestState = useRef(state)
+  const cartItems = state.items
 
-  // All cart actions commit here so sequential clicks see the latest quantity,
-  // even when React batches their renders.
-  function commit(items: CartItem[]) {
-    latestItems.current = items
-    setCartItems(items)
+  // Preview the same pure transition for immediate success feedback. Every action
+  // goes through here so batched clicks see all previously accepted actions.
+  function sendAction(action: CartAction): boolean {
+    const next = cartReducer(latestState.current, action)
+    if (next === latestState.current) return false
+    latestState.current = next
+    dispatch(action)
+    return true
   }
 
   useEffect(() => {
-    saveCart(cartItems)
-  }, [cartItems])
+    saveCart(state)
+  }, [state])
 
   function addToCart(product: Product, quantity = 1) {
     const item: CartItem = {
@@ -31,28 +36,13 @@ export default function CartProvider({ children }: { children: ReactNode }) {
       stock: product.stock,
       quantity,
     }
-    if (!isCartItem(item)) return false
-    const items = latestItems.current
-    const existing = items.find((entry) => entry.productId === item.productId)
-    const nextQuantity = (existing?.quantity ?? 0) + quantity
-    if (!Number.isSafeInteger(nextQuantity) || nextQuantity > product.stock) return false
-    commit(existing
-      ? items.map((entry) => entry.productId === item.productId
-        ? { ...entry, stock: product.stock, quantity: nextQuantity }
-        : entry)
-      : [...items, item])
-    return true
+    return sendAction({ type: 'ADD_ITEM', item })
   }
 
   function changeQuantity(productId: number, change: number) {
-    const items = latestItems.current
-    const item = items.find((entry) => entry.productId === productId)
+    const item = latestState.current.items.find((entry) => entry.productId === productId)
     if (!item) return
-    const quantity = item.quantity + change
-    if (!Number.isSafeInteger(quantity) || quantity < 1) return
-    // Legacy over-stock rows may decrease, but cannot increase further.
-    if (change > 0 && quantity > item.stock) return
-    commit(items.map((entry) => entry.productId === productId ? { ...entry, quantity } : entry))
+    sendAction({ type: 'SET_QTY', productId, quantity: item.quantity + change })
   }
 
   return (
@@ -61,10 +51,10 @@ export default function CartProvider({ children }: { children: ReactNode }) {
       cartItemCount: cartItems.reduce((count, item) => count + item.quantity, 0),
       cartTotal: cartItems.reduce((cents, item) => cents + priceInCents(discountedPrice(item.price, item.discountPercentage)) * item.quantity, 0) / 100,
       addToCart,
-      removeFromCart: (productId) => commit(latestItems.current.filter((item) => item.productId !== productId)),
+      removeFromCart: (productId) => { sendAction({ type: 'REMOVE_ITEM', productId }) },
       increaseQuantity: (productId) => changeQuantity(productId, 1),
       decreaseQuantity: (productId) => changeQuantity(productId, -1),
-      clearCart: () => commit([]),
+      clearCart: () => { sendAction({ type: 'CLEAR' }) },
     }}>
       {children}
     </CartContext.Provider>
