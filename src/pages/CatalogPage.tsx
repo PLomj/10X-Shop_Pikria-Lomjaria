@@ -18,6 +18,11 @@ export default function CatalogPage() {
   const location = useLocation()
   const { query, category, sort, page } = parseCatalogSearchParams(searchParams)
   const [draft, setDraft] = useState<{ text: string; locationKey: string } | null>(null)
+  // History entries reuse their keys on Back/Forward. Discard an abandoned
+  // draft permanently so returning to its entry cannot restart its timer.
+  if (draft && draft.locationKey !== location.key) {
+    setDraft(null)
+  }
   const searchText = draft?.locationKey === location.key ? draft.text : query
   const searchPending = searchText.trim() !== query
   const [categories, setCategories] = useState<ProductCategory[] | null>(null)
