@@ -1,5 +1,57 @@
 # 10X Shop verification report
 
+## Current outcome: Step 25A — Documentation and local verification
+
+Local command verification and documentation reconciliation are complete for user review. This is not final browser, hosted, GitHub or submission acceptance. Only README.md, PLAN.md and REPORT.md were intentionally edited in Step 25A. Application source, configuration, dependencies and PROJECT_SPEC.md remain unchanged; the build regenerated normal dist output and TypeScript cache files. No dependencies, Git commands, commits, pushes, deployment or remote repository changes were performed.
+
+### Newly executed local commands
+
+Commands ran separately against the existing installed dependencies, in the following order:
+
+| Command | Actual result |
+| --- | --- |
+| npm run typecheck | PASS, exit 0; tsc -b, no errors reported |
+| npm run build | PASS, exit 0; tsc -b and Vite 8.3.5, 145 modules transformed |
+| npm run lint | PASS, exit 0; eslint ., no errors or warnings reported |
+
+The build emitted dist/index.html (0.47 kB), CSS (18.58 kB) and JavaScript (335.11 kB). These command successes do not establish runtime browser behavior. No new functional automated regression suite was executed; historical case counts below were not rerun or added together.
+
+### Current implementation and evidence attribution
+
+| Area | Current status and evidence |
+| --- | --- |
+| CORE shopping journey and existing extensions | Existing Catalog, Product Details, Cart, simulated Login/Checkout, Orders and Profile remain implemented. Prior user acceptance and regression records retain their original scope; this stage does not repeat them. |
+| Step 21 Login correction | Username and Password required validation, field errors and first-invalid focus are implemented. Step 21 implementation success is attributed to its prior implementation report and subsequent user confirmation; no exact automated case count is asserted. Browser acceptance remains outstanding. Only the trimmed username enters Auth Context; there is no real password verification or backend authentication. |
+| Step 22 typecheck | Standalone tsc -b script implemented; typecheck/build/lint historically reported PASS and freshly PASS again in Step 25A. |
+| Step 23 Error Boundary | Typed native boundary outside BrowserRouter implemented. Historical typecheck/build/lint PASS and 9 isolated checks PASS / 0 FAIL. Server rendering, mocked reload and isolated state checks do not demonstrate real client error capture. Browser descendant/lifecycle error capture and reload remain NOT VERIFIED. |
+| Step 24 DEBUG-LOG | Completed documentation-only compliance/debugging record below. It introduces no runtime logging system and claimed no newly executed runtime checks. |
+| Historical Step 18.2 and earlier suites | Preserved below with their original results and limitations. The Step 18.2 milestone is historical, not the current stage. |
+
+### Browser attempt and outstanding acceptance
+
+Step 25A started a disposable in-memory static server serving the freshly built dist on an ephemeral 127.0.0.1 port. The in-app browser attempted the local /login URL but reported net::ERR_CONNECTION_TIMED_OUT before the page loaded. The server was then closed. No application browser acceptance case completed, no test route/crash switch/source file was added, and no existing user storage was read or modified. This is a tooling/connectivity limitation, not evidence of an application runtime defect.
+
+The following remain NOT VERIFIED in Step 25A:
+
+1. Login blank/whitespace validation, first-invalid focus, correction and Enter submission in a real browser.
+2. Protected-route return navigation after the required two-field Login, including safe query/hash preservation.
+3. Actual Error Boundary descendant rendering/lifecycle capture, fallback and Reload Page behavior in a disposable client environment.
+4. Catalog, Product Details, Cart, Login and Checkout at 375px without horizontal overflow.
+5. Final Catalog → Product → Cart → Login → Checkout → confirmation journey and Cart clearing.
+6. Current hosted direct navigation/refresh, particularly /products/5, and unexpected runtime errors on the final deployed revision.
+
+Earlier user-confirmed browser acceptance for Orders, Profile and Catalog skeletons remains historical evidence. It does not close these final-revision checks. No production defect was discovered by the three executed commands; their coverage cannot rule out browser defects.
+
+### Submission readiness and scope boundaries
+
+- Local origin configuration identifies https://github.com/PLomj/10X-Shop_Pikria-Lomjaria.git. README links the corresponding repository page; public accessibility, current remote branch and pushed revision are unverified. No Git commands or remote access were used.
+- Actual live URL: PENDING — not supplied or confirmed. Netlify deployment remains user-reported; no guessed live link is inserted. Local Netlify SPA fallback and Vercel rewrite configuration do not prove deployed behavior.
+- README now documents required Username/Password, username-only Auth state, typecheck, Error Boundary and DEBUG-LOG. PLAN includes completed corrections, the PRD three-week planning framework (not invented actual dates), and final submission tasks.
+- Remaining mandatory delivery work is to confirm the live URL, finish browser acceptance, review/commit/push approved changes, verify public GitHub and the final deployment, and submit through the required form. Those actions require separate authorization where applicable. The original PRD section 4 deadline is November 6, 2026, 23:59 Georgia time; submission confirmation is not available here.
+- Historical records below may describe earlier source or pending acceptance. Their scoped labels and later supersession notes apply. DEBUG-LOG is preserved. No new FULL/BONUS feature, Step 25B or Step 26 was started.
+
+Suggested commit: `docs: reconcile final CORE compliance and submission readiness`.
+
 ## DEBUG-LOG — CORE compliance corrections
 
 This section records genuine requirements-compliance corrections, not invented runtime incidents. The original Georgian PRD v1.1 introductory Optimization CORE table requires DEBUG-LOG and basic debugging; section 3, Step 22 asks the student to explain how a problem was found and corrected. No particular log format is specified. Requirement references below refer to ORIGINAL_PRD.md unless identified as archived references.
@@ -46,7 +98,9 @@ Evidence provenance: Step 24 reviewed current source and existing records only. 
 - **Verification evidence:** See the existing [PRD P2.6 and P2.7 correction](#prd-p26-and-p27-correction) record below for the original endpoint checks, parameter checks, lint/build results and execution context. Those historical checks were not rerun in Step 24.
 - **Remaining limitations:** The archived endpoint observations are historical, not current service guarantees. Its pending browser statements describe that earlier stage. The standalone client sorting utility is only a fallback for endpoints proven unable to sort and cannot provide global ordering across unloaded pages. P2.6/P2.7 are the archived audit's references; the available ORIGINAL_PRD.md section 3, Step 9 classifies sorting/pagination as FULL without reproducing that detailed numbering.
 
-## Current outcome: Step 18.2
+## Historical milestone: Step 18.2
+
+This outcome and its stage-relative “newly executed,” “current,” and pending-review wording are retained as historical evidence. Step 25A above describes current readiness; this record does not imply that later stages have not occurred.
 
 Recommendation: PASS for final user acceptance of Step 18.2 and completion of Step 18. Catalog Skeleton Loading is implemented, targeted verification passed, and documentation is reconciled. No confirmed blocking Catalog defect was found. Step 17 was completed and accepted by the user. No Step 19 work began.
 

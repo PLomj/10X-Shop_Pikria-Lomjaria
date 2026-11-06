@@ -1,6 +1,11 @@
 # 10X Shop
 
-10X Shop is a React + TypeScript front-end learning and diploma project with a complete shopping journey, DummyJSON products, simulated authentication, browser-local orders and Profile editing. CORE is complete by user sign-off. FULL features through Step 18 are implemented as listed below, including Catalog Skeleton Loading. Step 18.2 verification and documentation are complete and await final user review.
+10X Shop is a React + TypeScript front-end learning and diploma project with a complete shopping journey, DummyJSON products, simulated authentication, browser-local orders and Profile editing. Implemented features include Catalog Skeleton Loading and the CORE compliance corrections in Steps 21–24. Step 25A reconciles documentation and verifies local commands; final browser, hosted and submission checks remain pending. This is not a claim of complete submission readiness or implementation of every FULL requirement.
+
+## Project links
+
+- Configured GitHub repository: [PLomj/10X-Shop_Pikria-Lomjaria](https://github.com/PLomj/10X-Shop_Pikria-Lomjaria). This URL comes from local origin configuration; public accessibility and the pushed revision have not been verified in Step 25A.
+- Live URL: **PENDING — the actual Netlify/Vercel URL has not been supplied or confirmed.** No deployment URL is inferred from the repository name.
 
 ## Setup and commands
 
@@ -15,6 +20,7 @@ Open the URL printed by Vite.
 
 | Command | Purpose |
 | --- | --- |
+| `npm run typecheck` | Run the standalone TypeScript project check (`tsc -b`). |
 | `npm run lint` | Check source and hook rules. |
 | `npm run build` | Check TypeScript and generate `dist`. |
 | `npm run preview` | Serve the generated build after building. |
@@ -30,6 +36,7 @@ No test script or framework is configured. Steps 17.4 and 18.2 used dependency-f
 - Orders: protected history/details, validated persistence, recovery warnings, historical snapshots, simulated statuses and current-data Reorder. Results report accepted/skipped quantities and repricing of existing Cart units.
 - Profile: protected username display/editing, trimmed validation, unsaved draft preservation, committed-state feedback and immediate Header synchronization.
 - Shared responsive Header/Footer, keyboard/form accessibility patterns and Not Found.
+- Application-level native React Error Boundary outside BrowserRouter: generic accessible fallback and Reload Page action, without clearing stored data. Actual browser error capture/reload remains NOT VERIFIED.
 
 ## Catalog loading
 
@@ -53,7 +60,7 @@ ProductGridSkeleton uses one role="status" and a screen-reader-only Loading prod
 
 ## Authentication and Profile
 
-Login accepts any nonblank username. Username-only simulated Login is explicitly approved and differs from PROJECT_SPEC.md section 6.4 username/password wording. No password, real account identity, backend or authentication persistence exists; the specification was not changed.
+Login requires both Username and Password and rejects empty or whitespace-only values. Step 21 added controlled Password input, field-specific errors and first-invalid-field focus while preserving keyboard submission and safe return navigation. Authentication is simulated: only the trimmed username enters Auth Context. The password is used only for required-field validation in local form state; it is not passed to AuthProvider or persisted. There is no real password verification, backend authentication or persistent account session.
 
 Auth/Profile live only in React memory. Refresh signs out; Cart and Orders remain. Profile edits trim surrounding whitespace, preserve internal whitespace/case, and do not rewrite old reviews or orders. Future reviews use the current username. Typing updates a local draft until Save.
 
@@ -94,9 +101,11 @@ Endpoints on https://dummyjson.com: GET /products, /products/{id}, /products/sea
 
 ## Verification and limitations
 
-- Step 18.2 newly executed: lint PASS, TypeScript/build PASS, 31 Catalog cases PASS / 0 FAIL / 0 SKIP (6 structure, 9 transitions, 15 Catalog behavior, 1 React server-markup case). Hook/timer/URL simulations and server markup are not browser tests.
+- Step 25A newly executed: `npm run typecheck`, `npm run build` and `npm run lint` each PASS, exit 0. Build transformed 145 modules. No new functional automated suite ran. The in-app browser could not reach a temporary local preview (`net::ERR_CONNECTION_TIMED_OUT`); no browser acceptance case completed. The preview was closed, with no source edits or existing user storage access.
+- Historical Step 22: typecheck/build/lint PASS as previously reported. Historical Step 23: the same three commands PASS and 9 isolated checks PASS; browser descendant/lifecycle error capture and reload remain NOT VERIFIED. Step 21 implementation success is previously reported; its browser validation/focus/Enter acceptance remains outstanding.
+- Historical Step 18.2: lint PASS, TypeScript/build PASS, 31 Catalog cases PASS / 0 FAIL / 0 SKIP (6 structure, 9 transitions, 15 Catalog behavior, 1 React server-markup case). Hook/timer/URL simulations and server markup are not browser tests.
 - Historical Step 18.1: 31 PASS / 0 FAIL / 0 SKIP and lint/build PASS. The user confirmed it works successfully in the browser; that general confirmation does not establish every screen-reader, viewport or fault scenario.
-- Historical Step 17.4: lint/build PASS and 72 PASS / 0 FAIL / 0 SKIP; Step 17 is accepted. These historical counts are not added to the new Step 18.2 total.
+- Historical Step 17.4: lint/build PASS and 72 PASS / 0 FAIL / 0 SKIP; Step 17 is accepted. Historical suites remain separate and were not rerun in Step 25A.
 - Step 16 final browser regression and Step 17.3 Profile browser acceptance were user-confirmed PASS. Steps 17.4 and 18.2 operated no browser.
 - Real storage fault injection, screen-reader announcements, multi-tab concurrency and current hosted behavior were not verified here.
 - Storage is browser-local and nontransactional across tabs; deleting site data loses history. Saved orders contain submitted contact/address data; use sample data for this educational project.
@@ -106,8 +115,10 @@ Endpoints on https://dummyjson.com: GET /products, /products/{id}, /products/sea
 
 ## Deployment
 
-Netlify deployment is user-reported, not contacted or redeployed in Steps 17.4 or 18.2. Local configuration builds with `npm run build` and publishes `dist` without application environment variables. `public/_redirects` supplies Netlify SPA fallback; `vercel.json` provides an alternative rewrite configuration.
+Netlify deployment is user-reported. No hosted site was contacted or redeployed in Step 25A, and the actual live URL remains pending above. Local configuration builds with `npm run build` and publishes `dist` without application environment variables. `public/_redirects` supplies Netlify SPA fallback; `vercel.json` provides an alternative rewrite configuration. Local configuration does not verify hosting dashboard settings or the deployed revision.
 
 After a future approved deployment, test direct visits/refresh for Product Details, Cart, Checkout, Orders, Order Details, Profile and an unknown route. Protected destinations should reach Login and return safely afterward.
 
-See [PLAN.md](PLAN.md) for status and [REPORT.md](REPORT.md) for evidence provenance and remaining checks.
+Before submission, verify the public repository, final pushed/deployed revision, live URL, direct `/products/5` refresh, 375px CORE layouts and complete shopping journey. The original PRD section 4 deadline is November 6, 2026, 23:59 Georgia time; repository submission through the required form remains unverified. No Git, deployment or submission action was performed in Step 25A.
+
+See [PLAN.md](PLAN.md) for status and [REPORT.md](REPORT.md) for evidence provenance and remaining checks, including [DEBUG-LOG](REPORT.md#debug-log--core-compliance-corrections).
