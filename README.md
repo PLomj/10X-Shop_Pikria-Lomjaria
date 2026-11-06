@@ -1,3 +1,5 @@
+Deployed URL - https://10-x-shop-pikria-lomjaria.vercel.app/
+
 # 10X Shop
 
 10X Shop is a React + TypeScript front-end learning and diploma project with a complete shopping journey, DummyJSON products, simulated authentication, browser-local orders and Profile editing. Implemented features include Catalog Skeleton Loading and the CORE compliance corrections in Steps 21–24. Step 25A reconciles documentation and verifies local commands; final browser, hosted and submission checks remain pending. This is not a claim of complete submission readiness or implementation of every FULL requirement.
@@ -18,12 +20,12 @@ npm run dev
 
 Open the URL printed by Vite.
 
-| Command | Purpose |
-| --- | --- |
+| Command             | Purpose                                                 |
+| ------------------- | ------------------------------------------------------- |
 | `npm run typecheck` | Run the standalone TypeScript project check (`tsc -b`). |
-| `npm run lint` | Check source and hook rules. |
-| `npm run build` | Check TypeScript and generate `dist`. |
-| `npm run preview` | Serve the generated build after building. |
+| `npm run lint`      | Check source and hook rules.                            |
+| `npm run build`     | Check TypeScript and generate `dist`.                   |
+| `npm run preview`   | Serve the generated build after building.               |
 
 No test script or framework is configured. Steps 17.4 and 18.2 used dependency-free, in-memory checks; see [REPORT.md](REPORT.md) for separately attributed results.
 
@@ -46,17 +48,17 @@ ProductGridSkeleton uses one role="status" and a screen-reader-only Loading prod
 
 ## Routes
 
-| Route | Access |
-| --- | --- |
-| `/` | Public Catalog |
-| `/products/:id` | Public Product Details |
-| `/cart` | Public Cart |
-| `/login` | Public simulated Login |
-| `/checkout` | Protected |
-| `/orders` | Protected history |
-| `/orders/:id` | Protected details; id is a saved reference |
-| `/profile` | Protected Profile |
-| Other paths | Not Found |
+| Route           | Access                                     |
+| --------------- | ------------------------------------------ |
+| `/`             | Public Catalog                             |
+| `/products/:id` | Public Product Details                     |
+| `/cart`         | Public Cart                                |
+| `/login`        | Public simulated Login                     |
+| `/checkout`     | Protected                                  |
+| `/orders`       | Protected history                          |
+| `/orders/:id`   | Protected details; id is a saved reference |
+| `/profile`      | Protected Profile                          |
+| Other paths     | Not Found                                  |
 
 ## Authentication and Profile
 
@@ -75,12 +77,12 @@ Cart and Checkout share `calculateCartSummary()`. Prices are USD; discounted uni
 3. Shipping is free at $100 merchandise after promo; otherwise $10 for a non-empty Cart.
 4. Empty Cart shipping/total are $0. Total = subtotal − promo discount + shipping. Shipping is not discounted.
 
-| Storage | Contents |
-| --- | --- |
-| React memory | Auth username; resets on refresh/Logout. |
-| `shop_cart` localStorage | Items and promo; supports legacy arrays, clamps restored quantities to stock, keeps first valid duplicate ID. |
-| `shop_orders` localStorage | Historical customer/shipping details, items, prices, discounts and totals. Shared across simulated usernames within the browser profile/site origin. |
-| `shop_reviews` localStorage | Local reviews and captured author names. |
+| Storage                     | Contents                                                                                                                                             |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| React memory                | Auth username; resets on refresh/Logout.                                                                                                             |
+| `shop_cart` localStorage    | Items and promo; supports legacy arrays, clamps restored quantities to stock, keeps first valid duplicate ID.                                        |
+| `shop_orders` localStorage  | Historical customer/shipping details, items, prices, discounts and totals. Shared across simulated usernames within the browser profile/site origin. |
+| `shop_reviews` localStorage | Local reviews and captured author names.                                                                                                             |
 
 Order validation checks structure and historical arithmetic without current-product reconstruction. Corrupt/duplicate history produces explicit errors/recovery warnings and blocks saves instead of overwriting history. Identical saves are idempotent. Cart storage failures leave the live Cart usable but may prevent persistence.
 
@@ -88,14 +90,14 @@ Statuses are derived, not stored: less than 60 seconds Processing; 60–180 seco
 
 ## Architecture and API
 
-| Folder | Responsibility |
-| --- | --- |
-| `src/api` | Typed DummyJSON requests and response validation. |
-| `src/components` | Layout, product, Cart, Checkout, Orders and shared controls. |
-| `src/context` | Auth and reducer-based Cart state. |
-| `src/hooks` | Order history and clock lifecycle. |
-| `src/pages`, `src/routes` | Pages, routing and shared guard. |
-| `src/types`, `src/utils` | Contracts, pricing, validation, URL state, snapshots and storage. |
+| Folder                    | Responsibility                                                    |
+| ------------------------- | ----------------------------------------------------------------- |
+| `src/api`                 | Typed DummyJSON requests and response validation.                 |
+| `src/components`          | Layout, product, Cart, Checkout, Orders and shared controls.      |
+| `src/context`             | Auth and reducer-based Cart state.                                |
+| `src/hooks`               | Order history and clock lifecycle.                                |
+| `src/pages`, `src/routes` | Pages, routing and shared guard.                                  |
+| `src/types`, `src/utils`  | Contracts, pricing, validation, URL state, snapshots and storage. |
 
 Endpoints on https://dummyjson.com: GET /products, /products/{id}, /products/search?q=..., /products/categories and /products/category/{slug}. Catalog requests use limit/skip and sortBy/order as appropriate. API/image availability is external. No live API requests were made in Steps 17.4 or 18.2.
 
