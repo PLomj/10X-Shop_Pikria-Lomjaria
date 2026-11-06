@@ -9,7 +9,7 @@ function hasControlCharacters(value: string) {
 
 function isSafeDestinationPath(pathname: string) {
   if (hasControlCharacters(pathname) || /[\\?#]/.test(pathname)) return false
-  if (/^\/(?:checkout|orders)\/?$/i.test(pathname)) return true
+  if (/^\/(?:checkout|orders|profile)\/?$/i.test(pathname)) return true
   const match = /^\/orders\/([^/]+)\/?$/i.exec(pathname)
   if (!match) return false
   try {

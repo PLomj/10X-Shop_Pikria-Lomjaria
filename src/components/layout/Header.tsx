@@ -6,6 +6,7 @@ const links = [
   { to: '/', label: 'Catalog' },
   { to: '/cart', label: 'Cart' },
   { to: '/orders', label: 'Orders' },
+  { to: '/profile', label: 'Profile' },
   { to: '/login', label: 'Login' },
 ]
 
@@ -20,7 +21,7 @@ export default function Header() {
         </Link>
         <nav aria-label="Main navigation">
           <ul className="flex flex-wrap gap-1">
-            {links.filter(({ to }) => !user || to !== '/login').map(({ to, label }) => (
+            {links.filter(({ to }) => user ? to !== '/login' : to !== '/profile').map(({ to, label }) => (
               <li key={to}>
                 <NavLink
                   to={to}
