@@ -12,8 +12,23 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     return true
   }
 
+  function updateUsername(username: string): boolean {
+    const trimmedUsername = username.trim()
+    if (!user || !trimmedUsername) return false
+
+    setUser((currentUser) => {
+      if (!currentUser || currentUser.username === trimmedUsername) {
+        return currentUser
+      }
+
+      return { ...currentUser, username: trimmedUsername }
+    })
+
+    return true
+  }
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: user !== null, login, logout: () => setUser(null) }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: user !== null, login, updateUsername, logout: () => setUser(null) }}>
       {children}
     </AuthContext.Provider>
   )

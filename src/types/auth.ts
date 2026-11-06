@@ -10,5 +10,6 @@ export interface AuthContextValue {
   user: AuthUser | null
   isAuthenticated: boolean
   login: (username: string) => boolean
+  updateUsername: (username: string) => boolean
   logout: () => void
 }
