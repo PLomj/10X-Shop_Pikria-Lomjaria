@@ -1,10 +1,119 @@
 # 10X Shop verification report
 
-## Step 17.4 outcome
+## Current outcome: Step 18.2
+
+Recommendation: PASS for final user acceptance of Step 18.2 and completion of Step 18. Catalog Skeleton Loading is implemented, targeted verification passed, and documentation is reconciled. No confirmed blocking Catalog defect was found. Step 17 was completed and accepted by the user. No Step 19 work began.
+
+Only README.md, PLAN.md and REPORT.md were edited in Step 18.2. Production source, PROJECT_SPEC.md, API services, types, configuration and dependencies were not modified. No Git commands, installations, live API calls, real browser/storage operations or deployment were performed. Build commands regenerated their normal output.
+
+### Newly executed results
+
+| Command/check | Result |
+| --- | --- |
+| npm run lint | PASS, exit 0, no reported errors/warnings |
+| npm run build | PASS, exit 0; TypeScript and Vite, 144 modules |
+| Targeted dependency-free Catalog checks | 31 PASS / 0 FAIL / 0 SKIP |
+
+| Area | PASS | FAIL | SKIP |
+| --- | --- | --- | --- |
+| Structure | 6 | 0 | 0 |
+| Transitions | 9 | 0 | 0 |
+| Catalog behavior | 15 | 0 | 0 |
+| Rendered markup | 1 | 0 | 0 |
+| Total | 31 | 0 | 0 |
+
+All 31 registered cases executed in this stage. Browser-only scenarios are outside this count, not implicitly passed or skipped automated cases. Step 18.1 also reported 31 passes, but those are a separate historical execution, not the source of this new result and not added to it. Step 17.4’s historical 72 cases were not rerun as a full suite here.
+
+### Execution method and limits
+
+Freshly loaded actual current TypeScript modules were transpiled in memory using the already installed TypeScript compiler and evaluated in isolated VM contexts. The existing dependency-free harness was reused with a new, separate result ledger. Each Catalog test created new simulated hooks, controlled deferred API responses, effect dependency cleanups, a virtual 400 ms timer and a simulated URL/history store. The skeleton also ran through actual React server rendering; that checks emitted HTML, not browser layout or screen-reader behavior.
+
+No dependency, framework or permanent test file was added. Fetch was mocked/blocked and no browser storage was used. Component state timing, request cancellation and Back/Forward tests are simulations: they do not prove real React scheduling, browser events, network timing or assistive-technology output. Types are checked by the production TypeScript build; runtime structure checks alone do not prove a TypeScript contract.
+
+### New executed case ledger
+
+| # | Area | Scenario | Result |
+| --- | --- | --- | --- |
+| 1 | Structure | One status with screen-reader-only loading message | PASS |
+| 2 | Structure | 12 hidden decorative list cards with unique keys | PASS |
+| 3 | Structure | Responsive grid classes match actual ProductGrid | PASS |
+| 4 | Structure | Square image/title/description/price/action shapes | PASS |
+| 5 | Structure | No interactive focusable image or animated elements | PASS |
+| 6 | Structure | Typed props control count and searching announcement | PASS |
+| 7 | Transitions | Initial Catalog loading uses existing page size and message | PASS |
+| 8 | Transitions | Success replaces skeleton with grid and pagination | PASS |
+| 9 | Transitions | Product error replaces skeleton with alert and Retry | PASS |
+| 10 | Transitions | Retry starts new request/skeleton and then succeeds | PASS |
+| 11 | Transitions | Empty Catalog shows empty state without skeleton/pagination | PASS |
+| 12 | Transitions | Empty search retains feedback and Clear search | PASS |
+| 13 | Transitions | Out-of-range page shows recovery not skeleton | PASS |
+| 14 | Transitions | Short final page shows actual product count | PASS |
+| 15 | Transitions | Category loading does not block default product results | PASS |
+| 16 | Catalog behavior | 400 ms debounce trims query without category refetch | PASS |
+| 17 | Catalog behavior | Rapid query edits replace debounce timer | PASS |
+| 18 | Catalog behavior | Obsolete success cannot overwrite newer search result | PASS |
+| 19 | Catalog behavior | Obsolete failure cannot overwrite newer search result | PASS |
+| 20 | Catalog behavior | Unmount aborts category/product requests without late state updates | PASS |
+| 21 | Catalog behavior | Unmount clears pending debounce before it changes URL | PASS |
+| 22 | Catalog behavior | Selected category waits for validation and preserves sort/page | PASS |
+| 23 | Catalog behavior | Category failure keeps independent feedback and retry recovers | PASS |
+| 24 | Catalog behavior | Unknown category canonicalizes URL without invalid fetch | PASS |
+| 25 | Catalog behavior | Category selection clears search/resets page and preserves sort | PASS |
+| 26 | Catalog behavior | Sort resets page and preserves category and unrelated URL parameters | PASS |
+| 27 | Catalog behavior | Pagination preserves search/sort and avoids unchanged-page refetch | PASS |
+| 28 | Catalog behavior | Clearing search restores Catalog preserving sort | PASS |
+| 29 | Catalog behavior | Simulated Back/Forward does not revive abandoned search drafts | PASS |
+| 30 | Catalog behavior | Empty category preserves category-specific empty message | PASS |
+| 31 | Rendered markup | Actual React server markup has one status and twelve hidden noninteractive cards | PASS |
+
+### Source inspection and contract
+
+- ProductGridSkeleton accepts typed count/message props, renders a fixed decorative list with no data fetching, images, animation or interaction, and uses exactly one status region with an sr-only message. The list is aria-hidden; there are no focusable placeholders.
+- Skeleton and ProductGrid share grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3. Square image, text, price/rating and action shapes approximate ProductCard. Placeholder heights are approximate; arbitrary real content/result counts can still shift layout.
+- Catalog passes count={productPageSize}; the actual API service constant remains 12. It retains !currentResult and the original query-dependent Loading products…/Searching products… strings.
+- No new loading state, hook, API abstraction or dependency was introduced. Existing request keys, effects, AbortController, query/category/sort/page handling, empty/error/retry and unavailable-page handling remain.
+- The skeleton can appear while debounce is pending or a selected category awaits validation. A category load failure can leave skeletons visible with independent category error/Retry until category recovery; this preserves the existing lifecycle. A settled product request error replaces skeletons with its error/Retry.
+
+These are source-level findings, not extra passed cases. Inspected files: src/components/product/ProductGridSkeleton.tsx, src/pages/CatalogPage.tsx, src/components/product/ProductGrid.tsx, src/components/product/ProductCard.tsx, src/api/products.ts, src/types/product.ts and src/utils/catalogSearchParams.ts.
+
+### Evidence provenance
+
+| Evidence | Attribution |
+| --- | --- |
+| Step 18.2 new automation | 31 PASS / 0 FAIL / 0 SKIP plus fresh lint/build above. No browser tests. |
+| Source-level inspection | Contract findings above; not added to automated counts. |
+| Step 18.1 historical automation | 31 PASS / 0 FAIL / 0 SKIP and lint/build PASS, as previously reported. |
+| User-confirmed browser acceptance | User confirmed Step 18.1 works successfully in the browser. This is general acceptance; the message did not enumerate every viewport, fault, keyboard or screen-reader scenario. |
+| Prior stage evidence | Step 17 accepted; earlier 72-case regression evidence and Step 16/Profile browser confirmations are retained below as historical records. |
+
+Automated checks compare controlled inputs and outputs; browser acceptance checks the running interface and real interactions. Actual server-rendered markup is stronger evidence than a mock JSX shape for HTML output, but still cannot establish visual rendering or accessible announcement timing.
+
+### Remaining unverified browser and delivery scenarios
+
+1. Screen-reader loading announcements, timing and repeated query transitions.
+2. Every specific mobile/tablet/desktop viewport and layout movement under throttled loading; general browser success does not enumerate these.
+3. Real network failure/cancellation races, product Retry and category-error recovery in a browser.
+4. Full browser Back/Forward, keyboard-focus and post-loading Product Details/Add to Cart regression, unless separately confirmed in detail.
+5. Current hosted direct-route behavior after deployment. No host was contacted or updated here.
+6. Original-PRD delivery evidence: repository/commit count, Issues, PRs and demonstration materials. No Git operations were performed.
+
+Known broader limitations remain: external product/image availability, username-only in-memory authentication, browser-shared nontransactional storage, simulated status and payments, and no secure per-user order isolation. None is changed by this loading UI. Theme preferences and OOP services remain explicitly optional. Completing this feature does not establish audited compliance with every original-PRD detail.
+
+### Documentation reconciliation and acceptance
+
+README now describes Catalog skeleton behavior and separately sourced results. PLAN records accepted Step 17, implemented/browser-confirmed Step 18.1 and verified Step 18.2; Catalog Skeleton Loading is removed from current outstanding requirements. REPORT contains this current ledger and preserves prior evidence below. No production correction was needed. Final user review of Step 18.2 remains pending.
+
+Suggested commit: docs: record Catalog skeleton verification and completion.
+
+## Historical Step 17.4 record (superseded where noted)
+
+The following report is retained as historical evidence. Its “Catalog Skeleton Loading outstanding/text loading” and “Step 17 awaiting acceptance” statements describe the state then, not the current project. Step 17 has since been accepted; Step 18 implemented the skeleton and the current verification above supersedes those statuses. The historical 72-case count remains separate.
+
+### Step 17.4 outcome
 
 Ready for final user acceptance of Step 17.4. No confirmed blocking production defect was found by the executed checks. Only README.md, PLAN.md and REPORT.md were edited. Production source, PROJECT_SPEC.md and dependency files remain unchanged. No Git commands, live API requests, browser storage operations or deployment were performed.
 
-### Newly executed verification
+#### Newly executed verification
 
 | Check | Result |
 | --- | --- |
@@ -30,7 +139,7 @@ Pure utilities executed directly with fixtures. Component functions executed wit
 
 Every registered automated case executed. Browser-only scenarios were outside the automated suite and are not included in these counts. Cases can contain multiple related assertions; counts refer to cases, not assertions. Earlier reported test counts are not added to this total.
 
-### Executed case ledger
+#### Executed case ledger
 
 | # | Area | Scenario | Result |
 | --- | --- | --- | --- |
@@ -107,7 +216,7 @@ Every registered automated case executed. Browser-only scenarios were outside th
 | 71 | Reviews/history | Future review uses changed author and preserves existing review and order bytes | PASS |
 | 72 | Reviews/history | Guest author supported; invalid review never writes | PASS |
 
-## Source-level inspection
+### Source-level inspection
 
 - Auth: src/types/auth.ts and src/context/AuthProvider.tsx expose a username-only AuthUser, existing Login/Logout and updateUsername. It trims/rejects blanks, updates immutably from latest queued state, preserves unchanged identity, and cannot restore null after Logout. Its boolean denotes acceptance, not a committed update. No Auth storage was introduced.
 - Profile: src/pages/ProfilePage.tsx holds a draft independently until Save. Feedback requires submitted/committed username equality and is invalidated on editing. Guarded username reconciliation preserves an edited draft and displays an external-change notice. Labels, associated errors, aria-invalid, focus handling and status regions exist; source inspection is not a browser accessibility audit.
@@ -123,7 +232,7 @@ Every registered automated case executed. Browser-only scenarios were outside th
 
 These are inspections, not additional passed test cases. Source references are relative to the repository root.
 
-## Evidence provenance
+### Evidence provenance
 
 | Evidence | Meaning |
 | --- | --- |
@@ -135,7 +244,7 @@ These are inspections, not additional passed test cases. Source references are r
 
 Automated regression checks supply known inputs and compare results; they help catch changed calculations and transitions. Browser acceptance checks the running interface: actual navigation, focus, layout, storage and announcements. Calling a simulated handler or examining JSX does not prove these real-browser interactions. User-confirmed browser results retain that attribution.
 
-## Known limitations and approved decisions
+### Known limitations and approved decisions
 
 - Username-only Login is explicitly approved and differs from PROJECT_SPEC.md section 6.4 username/password wording. PROJECT_SPEC.md was not edited. No password, backend, new Profile field or authentication persistence was added.
 - Auth/Profile reset on refresh or Logout. shop_cart, shop_orders and shop_reviews persist per browser profile/site origin. History is shared across simulated usernames; route guards do not provide secure per-user authorization.
@@ -145,7 +254,7 @@ Automated regression checks supply known inputs and compare results; they help c
 - VM simulations do not model the full React scheduler, DOM, browser event dispatch, Strict Mode lifecycle, actual network cancellation or assistive technology. Mock failures are not evidence of real browser fault handling.
 - No confirmed product defect was found by the executed checks. Coverage is bounded and does not prove every possible failure path.
 
-## Remaining browser-only and delivery checks
+### Remaining browser-only and delivery checks
 
 The agreed Step 17.3 browser checklist is user-confirmed PASS; it is not universally pending. The following remain unverified in this stage:
 
@@ -159,13 +268,13 @@ The agreed Step 17.3 browser checklist is user-confirmed PASS; it is not univers
 
 Useful future journey: Catalog → Product Details → Cart → Login → Checkout → confirmation → View order → Reorder → Cart; then Profile save → Header update → Logout → protected-route return. Compare old review authors and saved order totals before/after Profile editing. Use disposable sample data for fault tests.
 
-## Remaining FULL work and final acceptance
+### Remaining FULL work and final acceptance
 
 Catalog Skeleton Loading (PROJECT_SPEC.md section 7) is outstanding and needs separate approval; Retry already exists. Theme preferences and OOP services are explicitly optional. Section 14 delivery evidence remains unaudited. The original PRD was not found in the earlier repository audit, so omitted detailed criteria must not be invented or waived.
 
 Step 17.4 executed verification and documentation are complete; final user acceptance is pending. No next stage started. Suggested commit: `docs: reconcile project status and Step 17 regression evidence`.
 
-## Historical evidence retained
+### Historical evidence retained
 
 The following records are earlier observations, not Step 17.4 executions or claims about current live services.
 
@@ -174,11 +283,11 @@ The following records are earlier observations, not Step 17.4 executions or clai
 - Earlier deployment preparation reported dist assets, Netlify fallback and Vercel rewrite checks. A permitted local preview reportedly served the app for five direct routes after a sandbox loopback restriction. This is not current hosted verification.
 - The earlier tracked-file/environment check was not a Git-history secret audit. No Git operations occurred in Step 17.4.
 
-### Archived sorting/pagination correction
+#### Archived sorting/pagination correction
 
 The archived section below preserves useful earlier evidence verbatim. Endpoint counts, live calls and sandbox retries are historical. Its final references to pending browser checks describe that earlier stage; they do not override subsequent user sign-offs or the provenance table above.
 
-## PRD P2.6 and P2.7 correction
+### PRD P2.6 and P2.7 correction
 
 The approved correction supersedes the earlier page-local sorting plan. Catalog requests now use a shared page size of 12. Sort selection is part of the request state and resets to page 1 while preserving the active Search or Category mode. Default omits sorting parameters. Other options map to API sortBy and order parameters.
 
@@ -189,4 +298,5 @@ The standalone sortProducts utility is retained only as a documented fallback fo
 After the correction, lint and build passed. Mocked checks covered all four non-default API parameter mappings, omission for Default, and 12-item pagination defaults in all modes. Live calls through the updated functions confirmed ascending prices across pages 1 and 2. Observed totals were 194 catalog items, 23 phone search results, and 16 smartphones, producing 17, 2, and 2 pages. Search and Category final pages contained 11 and 4 items. The sandbox initially blocked DNS; the approved retry with network access passed.
 
 A controlled handler check confirmed sorting from page 2 resets to page 1 and preserves the active Search or Category mode. Mode changes retained the chosen sort. Browser interaction and hosted regression checks remain pending. Existing historical browser checklists above describe CORE review and should be supplemented by the current pagination and sorting checks.
+
 
