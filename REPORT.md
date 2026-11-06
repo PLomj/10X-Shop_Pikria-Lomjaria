@@ -1,5 +1,51 @@
 # 10X Shop verification report
 
+## DEBUG-LOG — CORE compliance corrections
+
+This section records genuine requirements-compliance corrections, not invented runtime incidents. The original Georgian PRD v1.1 introductory Optimization CORE table requires DEBUG-LOG and basic debugging; section 3, Step 22 asks the student to explain how a problem was found and corrected. No particular log format is specified. Requirement references below refer to ORIGINAL_PRD.md unless identified as archived references.
+
+Evidence provenance: Step 24 reviewed current source and existing records only. No npm scripts, automated runtime checks, browser tests, live API requests or deployment were executed in Step 24. Previously reported results below retain their original attribution and are not new test results. Older stage-specific statements and counts later in this report remain historical.
+
+### Entry 1 — Login Password Requirement
+
+- **Classification:** CORE compliance gap, not a confirmed runtime bug.
+- **Issue or gap:** Original PRD section 3, Step 5 requires Username/Password required validation; PROJECT_SPEC.md section 6.4 also specifies both fields.
+- **Discovery:** Original PRD reconciliation during Step 20 identified the omitted required field.
+- **Diagnosis:** The earlier Login form accepted only Username. The approved earlier simulation did not satisfy the original PRD's two-field form requirement.
+- **Correction:** Step 21 added a controlled Password field, typed field-specific validation and first-invalid-field focus in src/pages/LoginPage.tsx and src/types/auth.ts. Both fields reject blank or whitespace-only values; valid submission calls login(trimmedUsername) without passing the password.
+- **Verification evidence:** Step 21 implementation results are attributed to the existing implementation report and the user's subsequent confirmation that Step 21 was implemented successfully; no exact test count is asserted here. Step 24 source inspection confirms the required password input, controlled values, associated error messages, focus refs and validation before login. Inspection is not execution of those interactions.
+- **Remaining limitations:** Step 21 browser acceptance remains outstanding. Authentication is simulated; src/context/AuthProvider.tsx receives and stores only the username in memory. There is no real password verification or backend authentication. The password stays in local form state and is not passed to AuthProvider.
+
+### Entry 2 — Explicit Typecheck Script
+
+- **Classification:** CORE compliance gap, not a TypeScript compiler failure.
+- **Issue or gap:** Original PRD section 3, Step 1 and section 4 explicitly require npm run typecheck; section 3, Step 23 requires strict checking without errors.
+- **Discovery:** Step 20 audit identified the missing standalone command.
+- **Diagnosis:** The build already performed TypeScript checking through tsc -b, but package.json did not expose a separate typecheck npm script.
+- **Correction:** Step 22 added "typecheck": "tsc -b" to package.json, preserving "build": "tsc -b && vite build".
+- **Verification evidence:** Previously reported Step 22 results: npm run typecheck PASS, npm run build PASS and npm run lint PASS. The user repeated these results when requesting Step 23. Step 24 source inspection confirms the current scripts; these commands were not rerun here.
+- **Remaining limitations:** These are historical checks, not proof that every future source change will typecheck. No new compiler or browser verification is claimed in this documentation step.
+
+### Entry 3 — Error Boundary
+
+- **Classification:** CORE compliance gap, not a documented production crash.
+- **Issue or gap:** The original PRD introductory module table explicitly lists Error Boundary under Optimization CORE.
+- **Discovery:** Step 20 audit identified the missing application-level boundary.
+- **Diagnosis:** No application-level React Error Boundary existed; API request error handling alone does not catch descendant rendering and lifecycle errors.
+- **Correction:** Step 23 added the strictly typed native React class in src/components/ui/ErrorBoundary.tsx and mounted it in src/main.tsx as StrictMode → ErrorBoundary → BrowserRouter → App. It renders generic accessible fallback content and a Reload Page action without exposing error details or clearing storage.
+- **Verification evidence:** Previously reported Step 23 results: npm run typecheck PASS, npm run build PASS, npm run lint PASS and 9 isolated checks PASS / 0 FAIL. Those checks used actual source with isolated mocks and server rendering; they checked normal rendering, fallback state/content, markup, mocked reload behavior, absence of storage access and mounting structure. Step 24 source inspection confirms the component and placement; it adds no runtime test result.
+- **Remaining limitations:** Real-browser descendant error capture, lifecycle error capture and reload behavior remain NOT VERIFIED because the disposable browser harness did not start. The isolated checks do not prove client-side error capture. Error Boundaries do not replace async API handling or event-handler try/catch, and reloading can encounter the same underlying error.
+
+### Entry 4 — Historical Sorting and Pagination Correction
+
+- **Classification:** FULL requirements-compliance correction, retained as a historical debugging example; not an additional CORE requirement.
+- **Issue or gap:** The earlier plan used page-local sorting and 10-item pagination rather than the API sorting and 12-item page requirements recorded in the archived P2.6/P2.7 audit.
+- **Discovery:** Original-PRD comparison during Step 11.5 exposed the mismatch.
+- **Diagnosis:** Sorting only the loaded page cannot provide globally ordered paginated results; the planned page size also differed from the recorded requirement.
+- **Correction:** API sorting and a shared page size of 12 replaced the earlier approach; changing sort resets pagination while preserving the active mode. Relevant source: src/api/products.ts and src/pages/CatalogPage.tsx.
+- **Verification evidence:** See the existing [PRD P2.6 and P2.7 correction](#prd-p26-and-p27-correction) record below for the original endpoint checks, parameter checks, lint/build results and execution context. Those historical checks were not rerun in Step 24.
+- **Remaining limitations:** The archived endpoint observations are historical, not current service guarantees. Its pending browser statements describe that earlier stage. The standalone client sorting utility is only a fallback for endpoints proven unable to sort and cannot provide global ordering across unloaded pages. P2.6/P2.7 are the archived audit's references; the available ORIGINAL_PRD.md section 3, Step 9 classifies sorting/pagination as FULL without reproducing that detailed numbering.
+
 ## Current outcome: Step 18.2
 
 Recommendation: PASS for final user acceptance of Step 18.2 and completion of Step 18. Catalog Skeleton Loading is implemented, targeted verification passed, and documentation is reconciled. No confirmed blocking Catalog defect was found. Step 17 was completed and accepted by the user. No Step 19 work began.
@@ -97,7 +143,7 @@ Automated checks compare controlled inputs and outputs; browser acceptance check
 5. Current hosted direct-route behavior after deployment. No host was contacted or updated here.
 6. Original-PRD delivery evidence: repository/commit count, Issues, PRs and demonstration materials. No Git operations were performed.
 
-Known broader limitations remain: external product/image availability, username-only in-memory authentication, browser-shared nontransactional storage, simulated status and payments, and no secure per-user order isolation. None is changed by this loading UI. Theme preferences and OOP services remain explicitly optional. Completing this feature does not establish audited compliance with every original-PRD detail.
+Known broader limitations remain: external product/image availability, browser-shared nontransactional storage, simulated status and payments, and no secure per-user order isolation. Login now requires both Username and Password following Step 21, superseding the earlier username-only form. Authentication remains simulated and session-only: AuthProvider receives and stores only the username; no real password verification or backend authentication is implemented. These limitations were not changed by the Catalog loading UI. Theme preferences and OOP services remain explicitly optional. Completing this feature does not establish audited compliance with every original-PRD detail.
 
 ### Documentation reconciliation and acceptance
 
@@ -108,6 +154,8 @@ Suggested commit: docs: record Catalog skeleton verification and completion.
 ## Historical Step 17.4 record (superseded where noted)
 
 The following report is retained as historical evidence. Its “Catalog Skeleton Loading outstanding/text loading” and “Step 17 awaiting acceptance” statements describe the state then, not the current project. Step 17 has since been accepted; Step 18 implemented the skeleton and the current verification above supersedes those statuses. The historical 72-case count remains separate.
+
+Its earlier username-only Login form descriptions and approved password exception are superseded by Step 21, which added the required Password field. They are retained below as historical records, not current form behavior. The username-only AuthUser and in-memory AuthProvider API remain unchanged.
 
 ### Step 17.4 outcome
 
