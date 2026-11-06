@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router'
 import { fetchProductsPage, getProductCategories, getProductsByCategory, productPageSize, searchProducts } from '../api/products'
 import ProductGrid from '../components/product/ProductGrid'
+import ProductGridSkeleton from '../components/product/ProductGridSkeleton'
 import SearchInput from '../components/ui/SearchInput'
 import CategorySelector from '../components/ui/CategorySelector'
 import SortSelector from '../components/ui/SortSelector'
@@ -165,7 +166,10 @@ export default function CatalogPage() {
         <SortSelector value={sort} onChange={changeSort} />
       </div>
       {!currentResult && (
-        <p role="status" className="text-neutral-600">{query ? 'Searching products…' : 'Loading products…'}</p>
+        <ProductGridSkeleton
+          count={productPageSize}
+          message={query ? 'Searching products…' : 'Loading products…'}
+        />
       )}
       {error && (
         <div className="space-y-3 rounded-lg border border-neutral-200 bg-white p-4">
